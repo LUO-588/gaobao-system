@@ -2857,6 +2857,7 @@ function saveDealInfo() {
         customer.status = 'deal';
         customer.serviceProgress = 1;
         customer.satisfaction = 5;
+        customer.completedDate = customer.dealDate || new Date().toISOString().split('T')[0];
         
         // 处理定金+尾款模式
         if (paymentMethod === 'deposit_balance') {
@@ -4006,6 +4007,8 @@ function saveAppointment() {
             createdAt: new Date().toISOString(),
             createdBy: currentUser ? currentUser.username : 'admin'
         };
+        newCustomer.dealDate = new Date().toISOString().split('T')[0];
+        newCustomer.completedDate = new Date().toISOString().split('T')[0];
         appData.customers.push(newCustomer);
         appt.customerId = newCustomer.id;
     } else {
@@ -4078,6 +4081,8 @@ function openDealFromAppointment(apptId) {
             satisfaction: 5,
             createdAt: new Date().toISOString()
         };
+        newCustomer.dealDate = new Date().toISOString().split('T')[0];
+        newCustomer.completedDate = new Date().toISOString().split('T')[0];
         appData.customers.push(newCustomer);
         appt.customerId = newCustomer.id;
         appt.status = 'success';
