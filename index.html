@@ -4046,7 +4046,12 @@ function openAppointmentDetail(id) {
     var html = '<div style="margin-bottom:15px;"><h4 style="color:var(--primary); margin-bottom:10px;">' + appt.customerName + '</h4><span class="status-tag ' + status.class + '">' + status.icon + ' ' + status.label + '</span></div>';
     html += '<p><strong>📞</strong> ' + appt.customerPhone + '</p>';
     html += '<p><strong>📅</strong> ' + appt.date + ' ' + appt.time + '</p>';
-    html += '<p><strong>👨‍🏫</strong> ' + appt.planner + '</p>';
+    var plannerOpts = '<option value="高老师" ' + (appt.planner === '高老师' ? 'selected' : '') + '>高老师</option>' +
+        '<option value="王老师" ' + (appt.planner === '王老师' ? 'selected' : '') + '>王老师</option>' +
+        '<option value="罗老师" ' + (appt.planner === '罗老师' ? 'selected' : '') + '>罗老师</option>' +
+        '<option value="梁老师" ' + (appt.planner === '梁老师' ? 'selected' : '') + '>梁老师</option>' +
+        '<option value="李老师" ' + (appt.planner === '李老师' ? 'selected' : '') + '>李老师</option>';
+html += '<p><strong>👨‍🏫</strong> <select id="edit-appt-planner" style="padding:2px 8px;border:1px solid #ddd;border-radius:4px;" onchange="updateApptPlanner(\'' + appt.id + '\', this.value)">' + plannerOpts + '</select></p>';
     html += '<p><strong>📍</strong> ' + (appt.campus || '-') + '</p>';
     html += '<p><strong>📋</strong> ' + (salesman ? salesman.name : '-') + '</p>';
     html += '<div style="margin-top:20px; padding-top:15px; border-top:1px solid var(--border);"><label style="margin-bottom:10px;"><strong>更新状态：</strong></label>';
@@ -4102,6 +4107,14 @@ function openDealFromAppointment(apptId) {
         renderPotentialCustomers();
         closeModal('appointment-detail-modal');
         alert('客户【' + appt.customerName + '】已标记为成交！\n请到"服务进度"页面编辑填写成交金额和付款方式。');
+    }
+}
+
+function updateAppointmentPlanner(id, planner) {
+    var appt = appData.appointments.find(function(a) { return a.id === id; });
+    if (appt) {
+        appt.planner = planner;
+        saveData();
     }
 }
 
