@@ -579,10 +579,32 @@
         
         /* 响应式 */
         @media (max-width: 768px) {
-            .sidebar { width: 60px; }
+            .sidebar { width: 50px; }
             .sidebar .nav-text, .nav-section { display: none; }
-            .content { margin-left: 60px; max-width: calc(100% - 60px); }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .sidebar .nav-item { padding: 12px 5px; font-size: 18px; }
+            .content { margin-left: 50px; padding: 15px; }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .card { padding: 10px; margin-bottom: 10px; }
+            .table { font-size: 12px; overflow-x: auto; display: block; }
+            .table th, .table td { padding: 6px 4px; white-space: nowrap; }
+            .btn { padding: 6px 10px; font-size: 12px; }
+            .modal-content { width: 95% !important; max-width: 95% !important; margin: 10px auto; padding: 15px; }
+            .navbar { padding: 10px; }
+            .navbar h1 { font-size: 14px; }
+            .form-control { font-size: 14px; padding: 8px; }
+            h2 { font-size: 16px; }
+            .schedule-grid { overflow-x: auto; }
+            .appointment-card { min-width: 120px; }
+            .tab { padding: 6px 10px; font-size: 12px; }
+            .nav-item { padding: 10px 5px; }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar { width: 45px; }
+            .content { margin-left: 45px; padding: 10px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .modal-content { width: 98% !important; padding: 10px; }
+            .btn-group { flex-wrap: wrap; }
         }
         
         /* 打印样式 */
