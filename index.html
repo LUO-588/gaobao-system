@@ -1,0 +1,4226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高报运营管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #0052D9;
+            --primary-dark: #003D99;
+            --secondary: #E6A23C;
+            --success: #67C23A;
+            --danger: #F56C6C;
+            --warning: #E6A23C;
+            --info: #909399;
+            --bg: #f5f7fa;
+            --text: #303133;
+            --text-light: #606266;
+            --border: #dcdfe6;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        /* ========== 登录页面 ========== */
+        .login-page {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 350px;
+        }
+        .login-box h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .login-box button {
+            width: 100%;
+            padding: 15px;
+            background: #0052D9;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .login-box button:hover {
+            background: #003D99;
+        }
+        .login-error {
+            color: red;
+            text-align: center;
+            margin-bottom: 15px;
+            display: none;
+        }
+        
+        /* ========== 主界面 ========== */
+        .main-page {
+            display: none;
+            min-height: 100vh;
+            background: var(--bg);
+        }
+        
+        /* 导航栏 */
+        .navbar {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .navbar h1 { font-size: 20px; font-weight: 600; }
+        .navbar-user {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .navbar-user select {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            cursor: pointer;
+        }
+        .navbar-user select option { color: #333; }
+        .navbar-user button {
+            padding: 6px 15px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .navbar-user button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        /* 主容器 */
+        .main-container {
+            display: flex;
+            margin-top: 60px;
+            min-height: calc(100vh - 60px);
+        }
+        
+        /* 侧边栏 */
+        .sidebar {
+            width: 220px;
+            background: white;
+            border-right: 1px solid var(--border);
+            padding: 20px 0;
+            position: fixed;
+            top: 60px;
+            left: 0;
+            bottom: 0;
+            overflow-y: auto;
+        }
+        .nav-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-light);
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        .nav-item:hover { background: var(--bg); color: var(--primary); }
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(0,82,217,0.1), transparent);
+            color: var(--primary);
+            border-left-color: var(--primary);
+            font-weight: 500;
+        }
+        .nav-item .icon { font-size: 18px; }
+        .nav-section {
+            padding: 10px 20px 5px;
+            font-size: 12px;
+            color: var(--info);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* 内容区 */
+        .content {
+            flex: 1;
+            margin-left: 220px;
+            padding: 20px;
+            max-width: calc(100% - 220px);
+        }
+        .page { display: none; }
+        .page.active { display: block; }
+        
+        /* 卡片 */
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+        .card-title { font-size: 16px; font-weight: 600; color: var(--text); }
+        
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+        }
+        .stat-card .label { font-size: 14px; color: var(--text-light); margin-bottom: 8px; }
+        .stat-card .value { font-size: 28px; font-weight: 700; color: var(--primary); }
+        .stat-card .sub { font-size: 12px; color: var(--info); margin-top: 5px; }
+        .stat-card.warning .value { color: var(--warning); }
+        .stat-card.success .value { color: var(--success); }
+        .stat-card.danger .value { color: var(--danger); }
+        
+        /* 表格 */
+        .table { width: 100%; border-collapse: collapse; }
+        .table th, .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        .table th { background: var(--bg); font-weight: 500; color: var(--text-light); }
+        .table tr:hover { background: var(--bg); }
+        
+        /* 按钮 */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        
+        /* 禁用按钮样式 */
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #c0c4cc !important;
+        }
+        .btn:disabled:hover {
+            background: #c0c4cc !important;
+        }
+        
+        /* 表单 */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .form-control:focus { outline: none; border-color: var(--primary); }
+        textarea.form-control { resize: vertical; min-height: 100px; }
+        
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-header h3 { font-size: 18px; }
+        .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--info); }
+        
+        /* 标签页 */
+        .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: var(--text-light);
+        }
+        .tab:hover { color: var(--primary); }
+        .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 500; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        /* 徽章 */
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+        .badge-primary { background: rgba(0,82,217,0.1); color: var(--primary); }
+        .badge-success { background: rgba(103,194,58,0.1); color: var(--success); }
+        .badge-warning { background: rgba(230,162,60,0.1); color: var(--warning); }
+        .badge-danger { background: rgba(245,108,108,0.1); color: var(--danger); }
+        
+        /* 进度条 */
+        .progress { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.3s; }
+        .progress-bar.success { background: var(--success); }
+        .progress-bar.warning { background: var(--warning); }
+        .progress-bar.danger { background: var(--danger); }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--info);
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 15px; }
+        
+        /* 筛选器 */
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .filter-bar select, .filter-bar input {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        /* 时间线 */
+        .timeline { padding-left: 20px; }
+        .timeline-item {
+            position: relative;
+            padding-left: 25px;
+            padding-bottom: 20px;
+            border-left: 2px solid var(--border);
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--primary);
+        }
+        .timeline-item.completed::before { background: var(--success); }
+        .timeline-item.active::before { background: var(--warning); width: 14px; height: 14px; left: -8px; }
+        
+        /* 生成内容展示 */
+        .generated-content {
+            background: var(--bg);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        
+        /* 状态标签 */
+        .status-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .status-success-deal {
+            background: rgba(245,108,108,0.15);
+            color: #F56C6C;
+            border: 1px solid rgba(245,108,108,0.3);
+        }
+        .status-failed-deal {
+            background: rgba(0,82,217,0.15);
+            color: #0052D9;
+            border: 1px solid rgba(0,82,217,0.3);
+        }
+        .status-pending-deal {
+            background: rgba(103,194,58,0.15);
+            color: #67C23A;
+            border: 1px solid rgba(103,194,58,0.3);
+        }
+        
+        /* 筛选按钮 */
+        .filter-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover { border-color: var(--primary); }
+        .filter-btn.active { 
+            background: var(--primary); 
+            color: white; 
+            border-color: var(--primary);
+        }
+        .filter-btn.success { border-color: #F56C6C; color: #F56C6C; }
+        .filter-btn.success.active { background: #F56C6C; color: white; }
+        .filter-btn.failed { border-color: #0052D9; color: #0052D9; }
+        .filter-btn.failed.active { background: #0052D9; color: white; }
+        .filter-btn.pending { border-color: #67C23A; color: #67C23A; }
+        .filter-btn.pending.active { background: #67C23A; color: white; }
+        
+        /* 预约表格 */
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: 80px repeat(7, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 13px;
+        }
+        .schedule-header {
+            background: var(--primary);
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+        .schedule-time {
+            background: var(--bg);
+            padding: 15px 8px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+        .schedule-cell {
+            background: white;
+            padding: 8px;
+            min-height: 80px;
+            position: relative;
+        }
+        .schedule-cell:hover { background: var(--bg); }
+        .appointment-card {
+            background: linear-gradient(135deg, rgba(0,82,217,0.05), rgba(0,82,217,0.1));
+            border-left: 3px solid var(--primary);
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .appointment-card:hover { transform: translateY(-2px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .appointment-card .customer { font-weight: 600; color: var(--text); margin-bottom: 4px; }
+        .appointment-card .planner { font-size: 12px; color: var(--primary); margin-bottom: 4px; }
+        .appointment-card .phone { font-size: 11px; color: var(--text-light); }
+        
+        /* 8阶段进度 */
+        .stage-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .stage-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        /* 周导航 */
+        .week-nav {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .week-nav .current-week {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        /* 统计表格 */
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .stats-table th, .stats-table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        .stats-table th { background: var(--bg); font-weight: 600; }
+        .stats-table tr:hover { background: var(--bg); }
+        .conversion-rate { font-weight: 600; color: var(--success); }
+        
+        /* 步骤指示器 */
+        .steps {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+        .step::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: var(--border);
+        }
+        .step:last-child::after { display: none; }
+        .step-num {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--border);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+        .step.completed .step-num { background: var(--success); }
+        .step.active .step-num { background: var(--primary); }
+        .step-label { margin-top: 8px; font-size: 12px; color: var(--text-light); }
+        
+        /* 星星评分 */
+        .stars { color: var(--secondary); }
+        
+        /* 警告框 */
+        .alert {
+            padding: 12px 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .alert-warning { background: rgba(230,162,60,0.1); border-left: 3px solid var(--warning); color: var(--warning); }
+        .alert-danger { background: rgba(245,108,108,0.1); border-left: 3px solid var(--danger); color: var(--danger); }
+        .alert-success { background: rgba(103,194,58,0.1); border-left: 3px solid var(--success); color: var(--success); }
+        
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .sidebar .nav-text, .nav-section { display: none; }
+            .content { margin-left: 60px; max-width: calc(100% - 60px); }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        
+        /* 打印样式 */
+        @media print {
+            .navbar, .sidebar, .btn, .modal, .login-page { display: none !important; }
+            .content { margin: 0 !important; max-width: 100% !important; }
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .search-box input { flex: 1; }
+        
+        .list-item {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .list-item:last-child { border-bottom: none; }
+        
+        /* 日报区块样式 */
+        #my-daily-report-card {
+            background: linear-gradient(135deg, rgba(0,82,217,0.03), rgba(0,82,217,0.08));
+        }
+        #my-daily-report-card .card-header {
+            border-bottom: none;
+            padding-bottom: 10px;
+        }
+        #my-daily-report-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary);
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ========== 登录页面 ========== -->
+<div id="loginPage" class="login-page">
+    <div class="login-box">
+        <h2>🔐 高报运营管理系统</h2>
+        <div id="loginError" class="login-error">账号或密码错误</div>
+        <input type="text" id="username" placeholder="请输入账号">
+        <input type="password" id="password" placeholder="请输入密码">
+        <button id="loginBtn">登 录</button>
+    </div>
+</div>
+
+<!-- ========== 主界面 ========== -->
+<div id="mainPage" class="main-page">
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <h1>📊 高报运营管理系统</h1>
+        <div class="navbar-user">
+            <span id="currentDate"></span>
+            <select id="userSelect">
+                <option value="admin">👤 管理员</option>
+                <option value="sales1">📞 电销-念老师</option>
+                <option value="sales2">📞 电销-周老师</option>
+                <option value="sales3">📞 电销-肖老师</option>
+                <option value="sales4">📞 电销-郭老师</option>
+                <option value="planner">📋 规划师</option>
+            </select>
+            <button onclick="logout()">退出</button>
+        </div>
+    </nav>
+    
+    <div class="main-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="nav-section">📈 运营看板</div>
+            <div class="nav-item active" data-page="dashboard">
+                <span class="icon">📊</span><span class="nav-text">数据看板</span>
+            </div>
+            <div class="nav-item" data-page="tasks">
+                <span class="icon">📋</span><span class="nav-text">任务管理</span>
+            </div>
+            <div class="nav-item" data-page="performance">
+                <span class="icon">🏆</span><span class="nav-text">绩效看板</span>
+            </div>
+            
+            <div class="nav-section">👥 客户管理</div>
+            <div class="nav-item" data-page="customers">
+                <span class="icon">👥</span><span class="nav-text">客户列表</span>
+            </div>
+            <div class="nav-item" data-page="services">
+                <span class="icon">🎯</span><span class="nav-text">服务进度</span>
+            </div>
+            <div class="nav-item" data-page="schedule">
+                <span class="icon">📅</span><span class="nav-text">预约时间表</span>
+            </div>
+            
+            <div class="nav-section">📞</div>
+            <div class="nav-item" onclick="openDailyReportModal()" style="color: var(--primary); font-weight: 600;">
+                <span class="icon">📞</span><span class="nav-text">电销日报</span>
+            </div>
+            
+            <div class="nav-section">✍️ 内容工具</div>
+            <div class="nav-item" data-page="moments">
+                <span class="icon">📱</span><span class="nav-text">朋友圈生成</span>
+            </div>
+            <div class="nav-item" data-page="scripts">
+                <span class="icon">💬</span><span class="nav-text">话术模板</span>
+            </div>
+            <div class="nav-item" data-page="cases">
+                <span class="icon">🌟</span><span class="nav-text">成功案例</span>
+            </div>
+            
+            <div class="nav-section">⚙️ 系统</div>
+            <div class="nav-item" data-page="settings">
+                <span class="icon">⚙️</span><span class="nav-text">系统设置</span>
+            </div>
+        </aside>
+        
+        <!-- 内容区 -->
+        <main class="content">
+            <!-- 数据看板 -->
+            <div id="page-dashboard" class="page active">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                    <h2>📊 数据看板</h2>
+                    <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                        <div class="tabs" style="border: none; margin: 0;">
+                            <div class="tab" data-period="today" onclick="setDashboardPeriod('today')" style="padding: 8px 16px; font-size: 13px;">本日</div>
+                            <div class="tab active" data-period="week" onclick="setDashboardPeriod('week')" style="padding: 8px 16px; font-size: 13px;">本周</div>
+                            <div class="tab" data-period="month" onclick="setDashboardPeriod('month')" style="padding: 8px 16px; font-size: 13px;">本月</div>
+                        </div>
+                        <select id="dashboard-sales-select" class="form-control" style="width: 150px;" onchange="updateDashboard()">
+                            <option value="all">全部电销人员</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 15px; padding: 10px 15px; background: var(--bg); border-radius: 8px;">
+                    <span id="dashboard-period-label" style="font-weight: 600; color: var(--primary);">本周数据</span>
+                    <span id="dashboard-sales-label" style="color: var(--text-light); margin-left: 15px;">全部电销人员</span>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="label">📞 电话量</div>
+                        <div class="value" id="stat-calls">0</div>
+                        <div class="sub" id="stat-calls-sub">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">💬 添加微信</div>
+                        <div class="value" id="stat-wechat">0</div>
+                        <div class="sub" id="stat-wechat-sub">-</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="label">📅 邀约上门</div>
+                        <div class="value" id="stat-visit">0</div>
+                        <div class="sub" id="stat-visit-sub">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">🏪 进店数</div>
+                        <div class="value" id="stat-arrived">0</div>
+                        <div class="sub" id="stat-arrived-sub">-</div>
+                    </div>
+                    <div class="stat-card danger">
+                        <div class="label">🔴 成交数</div>
+                        <div class="value" id="stat-deal">0</div>
+                        <div class="sub" id="stat-deal-sub">-</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="label">📈 成交率</div>
+                        <div class="value" id="stat-deal-rate">0%</div>
+                        <div class="sub">进店→成交</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">🔄 总转化率</div>
+                        <div class="value" id="stat-conversion">0%</div>
+                        <div class="sub">电话→成交</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">💰 营收</div>
+                        <div class="value" id="stat-revenue">¥0</div>
+                        <div class="sub" id="stat-revenue-sub">-</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">📈 转化漏斗</span>
+                    </div>
+                    <div style="padding: 20px 0;">
+                        <div style="margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>电话 → 添加微信</span>
+                                <span id="funnel1">0%</span>
+                            </div>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar" id="funnel1-bar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>微信 → 邀约上门</span>
+                                <span id="funnel2">0%</span>
+                            </div>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar warning" id="funnel2-bar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>上门 → 进店</span>
+                                <span id="funnel3">0%</span>
+                            </div>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar" id="funnel3-bar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>进店 → 成交</span>
+                                <span id="funnel4">0%</span>
+                            </div>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar success" id="funnel4-bar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">⚠️ 待办提醒</span>
+                    </div>
+                    <div id="reminders-list">
+                        <div class="empty-state">暂无提醒</div>
+                    </div>
+                </div>
+                
+                <!-- 我的日报区块 -->
+                <div class="card" id="my-daily-report-card" style="border-left: 4px solid var(--primary);">
+                    <div class="card-header">
+                        <span class="card-title">📞</span><span id="my-daily-report-title">我的日报</span>
+                        <span class="badge badge-success" id="daily-report-status-badge" style="display: none;">✓ 已填报</span>
+                        <span class="badge badge-warning" id="daily-report-status-pending" style="display: none;">⚠ 待填报</span>
+                    </div>
+                    <div id="my-daily-report-content">
+                        <div style="text-align: center; padding: 20px;">
+                            <p style="color: var(--text-light); margin-bottom: 15px;">今日工作数据统计</p>
+                            <button class="btn btn-primary" onclick="openDailyReportModal()">📝 填写日报</button>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border);">
+                        <div id="daily-report-quick-stats" style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 20px; color: var(--primary); font-weight: bold;" id="today-calls">0</div>
+                                <div style="font-size: 12px; color: var(--text-light);">今日电话</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 20px; color: var(--success); font-weight: bold;" id="today-connected">0</div>
+                                <div style="font-size: 12px; color: var(--text-light);">今日接通</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 20px; color: var(--warning); font-weight: bold;" id="today-wechat">0</div>
+                                <div style="font-size: 12px; color: var(--text-light);">添加微信</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 20px; color: var(--danger); font-weight: bold;" id="today-appointments">0</div>
+                                <div style="font-size: 12px; color: var(--text-light);">预约确定</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 任务管理 -->
+            <div id="page-tasks" class="page">
+                <h2 style="margin-bottom: 20px;">📋 任务管理</h2>
+                <div class="quick-actions">
+                    <button class="btn btn-primary" onclick="openTaskModal()">+ 新建任务</button>
+                    <button class="btn btn-outline" onclick="filterTasks('all')">全部</button>
+                    <button class="btn btn-outline" onclick="filterTasks('pending')">待完成</button>
+                    <button class="btn btn-outline" onclick="filterTasks('completed')">已完成</button>
+                </div>
+                <div class="card">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>任务名称</th>
+                                <th>负责人</th>
+                                <th>截止时间</th>
+                                <th>优先级</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tasks-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- 绩效看板 -->
+            <div id="page-performance" class="page">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0;">🏆 电销绩效排行</h2>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <select id="perf-sales-select" class="filter-bar select" style="padding: 8px 12px; border: 1px solid var(--border); border-radius: 4px;">
+                            <option value="">全部电销人员</option>
+                        </select>
+                        <button id="perf-edit-btn" class="btn btn-primary" style="display: none;" onclick="openPerformanceEditModal()">✏️ 修改业绩</button>
+                    </div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="label">本月总电话量</div>
+                        <div class="value" id="perf-total-calls">0</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="label">本月添加微信</div>
+                        <div class="value" id="perf-total-wechat">0</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="label">本月上门</div>
+                        <div class="value" id="perf-total-visit">0</div>
+                    </div>
+                    <div class="stat-card danger">
+                        <div class="label">本月成交</div>
+                        <div class="value" id="perf-total-deals">0</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">📊 个人业绩排行</span>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>姓名</th>
+                                <th>电话量</th>
+                                <th>添加微信</th>
+                                <th>上门</th>
+                                <th>成交</th>
+                                <th>转化率</th>
+                            </tr>
+                        </thead>
+                        <tbody id="performance-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- 客户列表 -->
+            <div id="page-customers" class="page">
+                <h2 style="margin-bottom: 20px;">👥 客户管理</h2>
+                <div class="quick-actions">
+                    <button class="btn btn-primary" onclick="openCustomerModal()">+ 添加客户</button>
+                    <button class="btn btn-success" onclick="exportCustomers()">📥 导出数据</button>
+                </div>
+                <div class="filter-bar">
+                    <select id="customer-filter-status">
+                        <option value="">全部状态</option>
+                        <option value="new">新增</option>
+                        <option value="contacted">已联系</option>
+                        <option value="wechat">已加微信</option>
+                        <option value="visit">已上门</option>
+                        <option value="deal">已成交</option>
+                    </select>
+                    <select id="customer-filter-intent">
+                        <option value="">全部意向</option>
+                        <option value="A">A-强意向</option>
+                        <option value="B">B-有意向</option>
+                        <option value="C">C-观望</option>
+                        <option value="D">D-无效</option>
+                    </select>
+                    <input type="text" id="customer-search" placeholder="搜索客户姓名/电话..." style="flex: 1; max-width: 300px;">
+                </div>
+                <div style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <span style="font-size: 13px; color: var(--text-light);">成交状态筛选：</span>
+                    <button class="filter-btn success active" data-deal-status="all" onclick="filterByDealStatus('all')">全部</button>
+                    <button class="filter-btn success" data-deal-status="deal" onclick="filterByDealStatus('deal')">🔴 成交</button>
+                    <button class="filter-btn failed" data-deal-status="no-deal" onclick="filterByDealStatus('no-deal')">🔵 未成交</button>
+                    <button class="filter-btn pending" data-deal-status="no-visit" onclick="filterByDealStatus('no-visit')">🟢 未到店</button>
+                </div>
+                <div class="card">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>姓名</th>
+                                <th>电话</th>
+                                <th>考生分数</th>
+                                <th>意向度</th>
+                                <th>跟进状态</th>
+                                <th>成交状态</th>
+                                <th>成交金额</th>
+                                <th>负责人</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customers-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- 预约时间表 -->
+            <div id="page-schedule" class="page">
+                <h2 style="margin-bottom: 20px;">📅 单周客户预约时间表</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="label">本周预约总数</div>
+                        <div class="value" id="schedule-total">0</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="label">已到店</div>
+                        <div class="value" id="schedule-arrived">0</div>
+                    </div>
+                    <div class="stat-card danger">
+                        <div class="label">成交</div>
+                        <div class="value" id="schedule-success">0</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="label">未成交</div>
+                        <div class="value" id="schedule-failed">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">未到店</div>
+                        <div class="value" id="schedule-pending">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">本周转化率</div>
+                        <div class="value" id="schedule-rate">0%</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="week-nav">
+                            <button class="btn btn-outline btn-sm" onclick="changeWeek(-1)">◀ 上一周</button>
+                            <span class="current-week" id="current-week-label">本周</span>
+                            <button class="btn btn-outline btn-sm" onclick="changeWeek(1)">下一周 ▶</button>
+                            <select id="schedule-campus-filter" class="filter-bar select" onchange="renderSchedule()" style="padding:6px 10px;border:1px solid var(--border);border-radius:4px;margin-left:10px;">
+                                <option value="">全部校区</option>
+                                <option value="西山校区">西山校区</option>
+                                <option value="北市区校区">北市区校区</option>
+                            </select>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-outline btn-sm" onclick="goToToday()">回到本周</button>
+                            <button class="btn btn-primary" onclick="openAppointmentModal()">+ 添加预约</button>
+                        </div>
+                    </div>
+                    <div id="schedule-container"></div>
+                </div>
+            </div>
+            
+            <!-- 服务进度 -->
+            <div id="page-services" class="page">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h2>🎯 服务进度管理</h2>
+                    <button class="btn btn-primary" onclick="openAddServiceCustomer()">➕ 添加客户</button>
+                </div>
+                
+
+                <div class="filter-bar">
+                    <select id="service-stage-filter">
+                        <option value="">全部阶段</option>
+                        <option value="1">阶段1: 签单仪式</option>
+                        <option value="2">阶段2: 建档启动</option>
+                        <option value="3">阶段3: 初访咨询</option>
+                        <option value="4">阶段4: 方案交付</option>
+                        <option value="5">阶段5: 方案调整</option>
+                        <option value="6">阶段6: 填报指导</option>
+                        <option value="7">阶段7: 录取追踪</option>
+                        <option value="8">阶段8: 入学服务</option>
+                    </select>
+                </div>
+                
+                <!-- 付费客户列表 -->
+                <div class="card" style="border-left: 4px solid #F56C6C;">
+                    <div class="card-header">
+                        <span class="card-title">✅ 付费客户（已完成服务）</span>
+                        <span class="badge badge-danger" id="paid-customer-count">0</span>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>客户姓名</th>
+                                <th>联系电话</th>
+                                <th>成交金额</th>
+                                <th>付款方式</th>
+                                <th>成交日期</th>
+                                <th>负责电销</th>
+                                <th>当前阶段</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="services-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- 添加服务客户弹窗 -->
+            <div class="modal" id="add-service-customer-modal">
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="modal-header">
+                        <h3 id="service-customer-modal-title">添加客户</h3>
+                        <button class="modal-close" onclick="closeModal('add-service-customer-modal')">&times;</button>
+                    </div>
+                    <form id="add-service-customer-form">
+                        <input type="hidden" id="service-customer-id">
+                        <div class="form-group">
+                            <label>客户姓名 <span style="color:red;">*</span></label>
+                            <input type="text" class="form-control" id="service-customer-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>客户电话 <span style="color:red;">*</span></label>
+                            <input type="tel" class="form-control" id="service-customer-phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label>考生姓名</label>
+                            <input type="text" class="form-control" id="service-customer-student">
+                        </div>
+                        <div class="form-group">
+                            <label>考生分数</label>
+                            <input type="number" class="form-control" id="service-customer-score">
+                        </div>
+                        <div class="form-group">
+                            <label>客户意向 <span style="color:red;">*</span></label>
+                            <select class="form-control" id="service-customer-intent" required>
+                                <option value="">请选择</option>
+                                <option value="高">高</option>
+                                <option value="中">中</option>
+                                <option value="低">低</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>负责电销人员</label>
+                            <select class="form-control" id="service-customer-owner"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>备注</label>
+                            <textarea class="form-control" id="service-customer-notes" rows="3" placeholder="请输入备注信息"></textarea>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">保存</button>
+                            <button type="button" class="btn btn-outline" onclick="closeModal('add-service-customer-modal')">取消</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- 朋友圈生成 -->
+            <div id="page-moments" class="page">
+                <h2 style="margin-bottom: 20px;">📱 朋友圈内容生成器</h2>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">🎯 生成朋友圈文案</span>
+                    </div>
+                    <div class="form-group">
+                        <label>输入关键词或主题：</label>
+                        <input type="text" class="form-control" id="moments-keyword" placeholder="例如：高考政策、选专业技巧、录取案例、成功故事">
+                    </div>
+                    <div class="form-group">
+                        <label>内容类型：</label>
+                        <select class="form-control" id="moments-type">
+                            <option value="all">综合生成</option>
+                            <option value="morning">早安问候/励志</option>
+                            <option value="knowledge">专业干货/知识</option>
+                            <option value="case">成功案例</option>
+                            <option value="policy">政策解读</option>
+                            <option value="promotion">促销/邀约</option>
+                        </select>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="generateMoments()">✨ 生成3条文案</button>
+                        <button class="btn btn-outline" onclick="copyMoments()">📋 复制全部</button>
+                    </div>
+                </div>
+                <div id="generated-moments"></div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">📚 文案模板库</span>
+                    </div>
+                    <div class="tabs">
+                        <div class="tab active" data-tab="template-morning">早安问候</div>
+                        <div class="tab" data-tab="template-knowledge">知识干货</div>
+                        <div class="tab" data-tab="template-case">成功案例</div>
+                    </div>
+                    <div id="template-morning" class="tab-content active">
+                        <div class="generated-content">🌅 早安，各位家长！
+
+"高考不是人生的终点，而是新起点✨
+选择对了，每所大学都能成就精彩人生！"
+
+📅 距2024高考还有【XX】天
+💪 加油，每一位努力的学子！
+
+康迪格优升学 | 用AI为梦想导航</div>
+                        <button class="btn btn-sm btn-outline" onclick="useTemplate(this)">使用此模板</button>
+                    </div>
+                    <div id="template-knowledge" class="tab-content">
+                        <div class="generated-content">🏫 【干货分享】报志愿选学校，这个坑千万别踩！
+
+很多家长以为：学校排名=学校实力
+真相是：专业排名>学校排名！
+
+🎯 正确姿势：
+1️⃣ 先定专业方向
+2️⃣ 再选该专业强的院校
+3️⃣ 最后看城市和综合因素
+
+想知道自己孩子适合什么专业？
+评论区留下【分数+科类】，帮您分析👇
+
+康迪格优升学 | 专注云南高考志愿</div>
+                        <button class="btn btn-sm btn-outline" onclick="useTemplate(this)">使用此模板</button>
+                    </div>
+                    <div id="template-case" class="tab-content">
+                        <div class="generated-content">🎉 【真实案例分享】
+
+📍 学员：张同学
+📊 高考成绩：理科 568分
+🎯 录取结果：云南大学 计算机专业
+
+✨ 规划亮点：
+• 精准定位：压线进入理想专业
+• 策略得当：梯度合理，无调剂风险
+
+"感谢康迪格优升学！当初差点选了另一所学校..."
+
+如果您也想让孩子的高考分数最大化利用，后台私信我～</div>
+                        <button class="btn btn-sm btn-outline" onclick="useTemplate(this)">使用此模板</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 话术模板 -->
+            <div id="page-scripts" class="page">
+                <h2 style="margin-bottom: 20px;">💬 话术模板库</h2>
+                <div class="tabs">
+                    <div class="tab active" data-tab="script-call">电销话术</div>
+                    <div class="tab" data-tab="script-invite">邀约话术</div>
+                    <div class="tab" data-tab="script-close">逼单话术</div>
+                </div>
+                <div id="script-call" class="tab-content active">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">📞 电销开场白（首通电话）</span>
+                        </div>
+                        <div class="generated-content">"喂，您好，请问是XX家长吗？
+
+我是康迪格优升学的规划顾问[姓名]，今天打电话是想和您分享一个好消息——我们正在为云南省高考考生提供免费的志愿规划测评服务。
+
+您家孩子今年参加高考是吧？目前成绩怎么样？对志愿填报有了解吗？
+
+（等待回应）
+
+是这样的，根据我们家数据分析，您家孩子的分数可以报考[XX]所一本院校，我们有专业的AI系统可以帮您精准定位最适合的学校和专业组合...
+
+请问您加微信方便吗？我可以把详细的分析报告发给您参考一下～"</div>
+                        <button class="btn btn-sm btn-primary" onclick="copyScript(this)">复制话术</button>
+                    </div>
+                </div>
+                <div id="script-invite" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">🎯 邀约上门话术</span>
+                        </div>
+                        <div class="generated-content">"XX妈妈，您好！我是康迪格优升学的[姓名]。
+
+之前给您发的分析报告看了吗？感觉对孩子的定位有没有更清晰一些？
+
+是这样的，我们这周有个「高考志愿规划专场咨询」，由资深规划师一对一为家长解答疑问。
+
+📅 时间：本周六/日（您方便哪天？）
+📍 地点：昆明市XX路XX号
+🎁 福利：当天预约可享受[XX]优惠
+
+名额确实不多，因为我也希望XX同学能得到最专业的指导。请问您上午还是下午方便呢？"</div>
+                        <button class="btn btn-sm btn-primary" onclick="copyScript(this)">复制话术</button>
+                    </div>
+                </div>
+                <div id="script-close" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <span class="card-title">💰 逼单话术</span>
+                        </div>
+                        <div class="generated-content">"XX爸爸/妈妈，经过今天专家的分析，您觉得对孩子有帮助吗？
+
+（等待回应）
+
+是这样的，咱们现在报名的家长可以享受几项专属权益：
+
+✅ 限时优惠：[原价5980元] → [活动价5200元]，立减780元
+✅ 赠送服务：大学4年跟踪 + 考研规划指导
+✅ 优先预约：专家档期优先选择权
+
+这个优惠活动到本周日就结束了，之后恢复原价。
+
+您看今天确定下来的话，我帮您走个VIP通道，全程优先处理。刷卡还是转账都行。"</div>
+                        <button class="btn btn-sm btn-primary" onclick="copyScript(this)">复制话术</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 成功案例 -->
+            <div id="page-cases" class="page">
+                <h2 style="margin-bottom: 20px;">🌟 成功案例库</h2>
+                <div id="cases-list"></div>
+            </div>
+            
+            <!-- 系统设置 -->
+            <div id="page-settings" class="page">
+                <h2 style="margin-bottom: 20px;">⚙️ 系统设置</h2>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">👥 团队成员管理</span>
+                        <button class="btn btn-primary" onclick="openAddTeamModal()">➕ 添加成员</button>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>姓名</th>
+                                <th>角色</th>
+                                <th>电话</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="team-tbody"></tbody>
+                    </table>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">📊 数据管理</span>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="exportData()">📥 导出全部数据</button>
+                        <button class="btn btn-danger" onclick="clearData()">🗑️ 清除所有数据</button>
+                        <button class="btn btn-primary" onclick="openAllDailyReports()">📊 查看电销日报</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">ℹ️ 系统信息</span>
+                    </div>
+                    <p><strong>版本：</strong>v2.0.0</p>
+                    <p><strong>最后更新：</strong>2024年4月</p>
+                    <p><strong>数据存储：</strong>本地浏览器 (LocalStorage)</p>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- ========== 模态框 ========== -->
+<!-- 新建任务 -->
+<div class="modal" id="task-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>新建任务</h3>
+            <button class="modal-close" onclick="closeModal('task-modal')">&times;</button>
+        </div>
+        <form id="task-form">
+            <div class="form-group">
+                <label>任务名称</label>
+                <input type="text" class="form-control" id="task-name" required>
+            </div>
+            <div class="form-group">
+                <label>负责人</label>
+                <select class="form-control" id="task-assignee"></select>
+            </div>
+            <div class="form-group">
+                <label>截止时间</label>
+                <input type="date" class="form-control" id="task-deadline" required>
+            </div>
+            <div class="form-group">
+                <label>优先级</label>
+                <select class="form-control" id="task-priority">
+                    <option value="low">低</option>
+                    <option value="medium" selected>中</option>
+                    <option value="high">高</option>
+                    <option value="urgent">紧急</option>
+                </select>
+            </div>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-outline" onclick="closeModal('task-modal')">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 添加客户 -->
+<div class="modal" id="customer-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="customer-modal-title">添加客户</h3>
+            <button class="modal-close" onclick="closeModal('customer-modal')">&times;</button>
+        </div>
+        <form id="customer-form">
+            <input type="hidden" id="customer-id">
+            <div class="form-group">
+                <label>客户姓名</label>
+                <input type="text" class="form-control" id="customer-name" required>
+            </div>
+            <div class="form-group">
+                <label>联系电话</label>
+                <input type="tel" class="form-control" id="customer-phone" required>
+            </div>
+            <div class="form-group">
+                <label>考生姓名</label>
+                <input type="text" class="form-control" id="customer-student">
+            </div>
+            <div class="form-group">
+                <label>考生分数</label>
+                <input type="number" class="form-control" id="customer-score">
+            </div>
+            <div class="form-group">
+                <label>意向度</label>
+                <select class="form-control" id="customer-intent">
+                    <option value="A">A - 强意向</option>
+                    <option value="B">B - 有意向</option>
+                    <option value="C">C - 观望</option>
+                    <option value="D">D - 无效</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>负责人</label>
+                <select class="form-control" id="customer-owner"></select>
+            </div>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-outline" onclick="closeModal('customer-modal')">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 跟进记录 -->
+<div class="modal" id="followup-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>添加跟进记录</h3>
+            <button class="modal-close" onclick="closeModal('followup-modal')">&times;</button>
+        </div>
+        <form id="followup-form">
+            <input type="hidden" id="followup-customer-id">
+            <div class="form-group">
+                <label>跟进方式</label>
+                <select class="form-control" id="followup-type">
+                    <option value="phone">电话</option>
+                    <option value="wechat">微信</option>
+                    <option value="visit">上门</option>
+                    <option value="deal">💰 成交</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>跟进内容</label>
+                <textarea class="form-control" id="followup-content" required></textarea>
+            </div>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-outline" onclick="closeModal('followup-modal')">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 服务详情 -->
+<div class="modal" id="service-modal">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+            <h3>服务进度详情</h3>
+            <button class="modal-close" onclick="closeModal('service-modal')">&times;</button>
+        </div>
+        <div id="service-detail"></div>
+    </div>
+</div>
+
+<!-- 编辑服务进度 -->
+<div class="modal" id="service-edit-modal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3>编辑服务进度</h3>
+            <button class="modal-close" onclick="closeModal('service-edit-modal')">&times;</button>
+        </div>
+        <form id="service-edit-form">
+            <input type="hidden" id="edit-service-id">
+            <div class="form-group">
+                <label>客户姓名</label>
+                <input type="text" class="form-control" id="edit-service-name" readonly>
+            </div>
+            <div class="form-group">
+                <label>当前服务阶段</label>
+                <select class="form-control" id="edit-service-stage">
+                    <option value="1">阶段1：签单仪式</option>
+                    <option value="2">阶段2：建档启动</option>
+                    <option value="3">阶段3：初访咨询</option>
+                    <option value="4">阶段4：方案交付</option>
+                    <option value="5">阶段5：方案调整</option>
+                    <option value="6">阶段6：填报指导</option>
+                    <option value="7">阶段7：录取追踪</option>
+                    <option value="8">阶段8：入学服务</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>完成时间</label>
+                <input type="date" class="form-control" id="edit-service-completed-date">
+            </div>
+            <div class="form-group">
+                <label>满意度评分</label>
+                <select class="form-control" id="edit-service-satisfaction">
+                    <option value="5">★★★★★ 非常满意</option>
+                    <option value="4">★★★★☆ 满意</option>
+                    <option value="3">★★★☆☆ 一般</option>
+                    <option value="2">★★☆☆☆ 不满意</option>
+                    <option value="1">★☆☆☆☆ 非常不满意</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>服务备注</label>
+                <textarea class="form-control" id="edit-service-notes" rows="3" placeholder="请输入服务备注信息..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>下次服务计划</label>
+                <input type="date" class="form-control" id="edit-service-next-date">
+            </div>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">保存修改</button>
+                <button type="button" class="btn btn-outline" onclick="closeModal('service-edit-modal')">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 添加预约 -->
+<div class="modal" id="appointment-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>添加预约</h3>
+            <button class="modal-close" onclick="closeModal('appointment-modal')">&times;</button>
+        </div>
+        <form id="appointment-form">
+            <input type="hidden" id="appointment-id">
+            <div class="form-group">
+                <label>客户姓名 *</label>
+                <input type="text" class="form-control" id="appointment-customer" required>
+            </div>
+            <div class="form-group">
+                <label>联系电话 *</label>
+                <input type="tel" class="form-control" id="appointment-phone" required>
+            </div>
+            <div class="form-group">
+                <label>电销人员 *</label>
+                <select class="form-control" id="appointment-salesman" required></select>
+            </div>
+            <div class="form-group">
+                <label>预约日期 *</label>
+                <input type="date" class="form-control" id="appointment-date" required>
+            </div>
+            <div class="form-group">
+                <label>预约时间 *</label>
+                <select class="form-control" id="appointment-time" required>
+                    <option value="09:00">09:00</option>
+                    <option value="10:00">10:00</option>
+                    <option value="14:00">14:00</option>
+                    <option value="15:00">15:00</option>
+                    <option value="16:00">16:00</option>
+                    <option value="19:00">19:00</option>
+                    <option value="20:00">20:00</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>规划师 *</label>
+                <select class="form-control" id="appointment-planner" required>
+                    <option value="">请选择规划师</option>
+                    <option value="王老师">王老师</option>
+                    <option value="李老师">李老师</option>
+                    <option value="张老师">张老师</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>校区 *</label>
+                <select class="form-control" id="appointment-campus" required>
+                    <option value="">请选择校区</option>
+                    <option value="西山校区">西山校区</option>
+                    <option value="北市区校区">北市区校区</option>
+                </select>
+            </div>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-outline" onclick="closeModal('appointment-modal')">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 预约详情 -->
+<div class="modal" id="appointment-detail-modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h3>预约详情</h3>
+            <button class="modal-close" onclick="closeModal('appointment-detail-modal')">&times;</button>
+        </div>
+        <div id="appointment-detail"></div>
+    </div>
+</div>
+
+<!-- 成交信息 -->
+<div class="modal" id="deal-modal">
+    <div class="modal-content" style="max-width: 450px;">
+        <div class="modal-header">
+            <h3>💰 填写成交信息</h3>
+            <button class="modal-close" onclick="closeModal('deal-modal')">&times;</button>
+        </div>
+        <div class="form-group">
+            <label>付款方式 *</label>
+            <select class="form-control" id="deal-payment-method" onchange="toggleDepositFields()">
+                <option value="">请选择</option>
+                <option value="deposit_balance">💰 定金 + 尾款</option>
+                <option value="full_wechat">💰 全款微信</option>
+                <option value="full_alipay">💰 全款支付宝</option>
+                <option value="full_bank">💰 全款银行转账</option>
+                <option value="full_cash">💰 全款现金</option>
+            </select>
+        </div>
+        <!-- 定金+尾款模式 -->
+        <div id="deposit-balance-fields" style="display: none;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label>定金金额 *</label>
+                    <input type="number" class="form-control" id="deal-deposit-amount" placeholder="请输入定金" oninput="updateTotalAmount()">
+                </div>
+                <div class="form-group">
+                    <label>尾款金额 *</label>
+                    <input type="number" class="form-control" id="deal-balance-amount" placeholder="请输入尾款" oninput="updateTotalAmount()">
+                </div>
+            </div>
+            <div style="background: var(--bg); padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span>💵 总金额：</span>
+                    <strong id="deal-total-display" style="color: var(--success);">¥0</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>✅ 已付金额（定金）：</span>
+                    <strong id="deal-paid-display" style="color: var(--primary);">¥0</strong>
+                </div>
+            </div>
+        </div>
+        <!-- 全款模式 -->
+        <div id="deal-full-amount-field">
+            <div class="form-group">
+                <label>成交金额 *</label>
+                <input type="number" class="form-control" id="deal-amount" placeholder="请输入成交金额">
+            </div>
+        </div>
+        <div class="btn-group">
+            <button type="button" class="btn btn-success" onclick="saveDealInfo()">确认成交</button>
+            <button type="button" class="btn btn-outline" onclick="closeModal('deal-modal')">取消</button>
+        </div>
+    </div>
+</div>
+
+<!-- 补缴尾款弹窗 -->
+<div class="modal" id="balance-payment-modal">
+    <div class="modal-content" style="max-width: 450px;">
+        <div class="modal-header">
+            <h3>💰 补缴尾款</h3>
+            <button class="modal-close" onclick="closeModal('balance-payment-modal')">&times;</button>
+        </div>
+        <div id="balance-payment-info" style="background: var(--bg); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+        </div>
+        <div class="form-group">
+            <label>尾款金额 *</label>
+            <input type="number" class="form-control" id="balance-amount-input" placeholder="请输入尾款金额">
+        </div>
+        <div class="form-group">
+            <label>尾款付款方式 *</label>
+            <select class="form-control" id="balance-payment-method">
+                <option value="">请选择</option>
+                <option value="wechat">💰 微信</option>
+                <option value="alipay">💰 支付宝</option>
+                <option value="bank">🏦 银行转账</option>
+                <option value="cash">💵 现金</option>
+            </select>
+        </div>
+        <div class="btn-group">
+            <button type="button" class="btn btn-success" onclick="saveBalancePayment()">确认补缴</button>
+            <button type="button" class="btn btn-outline" onclick="closeModal('balance-payment-modal')">取消</button>
+        </div>
+    </div>
+</div>
+
+<!-- 团队成员管理 -->
+<div class="modal" id="team-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="team-modal-title">添加成员</h3>
+            <button class="modal-close" onclick="closeModal('team-modal')">&times;</button>
+        </div>
+        <form id="team-form">
+            <input type="hidden" id="team-id">
+            <div class="form-group">
+                <label>姓名</label>
+                <input type="text" class="form-control" id="team-name" required>
+            </div>
+            <div class="form-group">
+                <label>角色</label>
+                <select class="form-control" id="team-role" required>
+                    <option value="">请选择角色</option>
+                    <option value="sales">电销人员</option>
+                    <option value="planner">规划师</option>
+                    <option value="admin">管理员</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>电话</label>
+                <input type="tel" class="form-control" id="team-phone" required>
+            </div>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">保存</button>
+                <button type="button" class="btn btn-outline" onclick="closeModal('team-modal')">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 电销日报弹窗 -->
+<div class="modal" id="daily-report-modal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3>📞</h3><h3 id="daily-report-modal-title">电销日报</h3>
+            <button class="modal-close" onclick="closeModal('daily-report-modal')">&times;</button>
+        </div>
+        
+        <!-- 日报状态提示 -->
+        <div id="daily-report-alert" style="margin-bottom: 20px; padding: 12px; border-radius: 8px; display: none;">
+        </div>
+        
+        <!-- 统计表单 -->
+        <form id="daily-report-form">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label>📞</label><label>今日电话拨打数量</label>
+                    <input type="number" class="form-control" id="report-calls" min="0" placeholder="请输入数字">
+                </div>
+                <div class="form-group">
+                    <label>📲</label><label>今日接通数量</label>
+                    <input type="number" class="form-control" id="report-connected" min="0" placeholder="请输入数字">
+                </div>
+                <div class="form-group">
+                    <label>💬</label><label>今日微信添加人数</label>
+                    <input type="number" class="form-control" id="report-wechat" min="0" placeholder="请输入数字">
+                </div>
+                <div class="form-group">
+                    <label>📅</label><label>今日预约确定人数</label>
+                    <input type="number" class="form-control" id="report-appointments" min="0" placeholder="请输入数字">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>备注（可选）</label>
+                <textarea class="form-control" id="report-notes" rows="2" placeholder="今日工作备注..."></textarea>
+            </div>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary">💾 保存日报</button>
+                <button type="button" class="btn btn-outline" onclick="closeModal('daily-report-modal')">取消</button>
+            </div>
+        </form>
+        
+        <!-- 快速登记新客户 -->
+        <div style="margin-top: 25px; padding-top: 20px; border-top: 2px dashed var(--border);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h4 style="margin: 0; color: var(--primary);">➕ 快速登记新客户</h4>
+                <span class="badge badge-primary">来源：微信添加</span>
+            </div>
+            <form id="quick-customer-form">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>客户姓名 <span style="color:red;">*</span></label>
+                        <input type="text" class="form-control" id="quick-customer-name" required placeholder="请输入客户姓名">
+                    </div>
+                    <div class="form-group">
+                        <label>客户电话 <span style="color:red;">*</span></label>
+                        <input type="tel" class="form-control" id="quick-customer-phone" required placeholder="请输入联系电话">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>意向度</label>
+                    <select class="form-control" id="quick-customer-intent">
+                        <option value="A">A - 强意向</option>
+                        <option value="B" selected>B - 有意向</option>
+                        <option value="C">C - 观望</option>
+                        <option value="D">D - 无效</option>
+                    </select>
+                </div>
+                <div class="btn-group">
+                    <button type="submit" class="btn btn-success">➕ 快速登记</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- 历史日报记录 -->
+        <div style="margin-top: 25px; padding-top: 20px; border-top: 2px dashed var(--border);">
+            <h4 style="margin: 0 0 15px 0; color: var(--text);">📋 我的日报记录</h4>
+            <div id="daily-report-history" style="max-height: 200px; overflow-y: auto;">
+                <div class="empty-state" style="padding: 20px;">暂无日报记录</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 管理员查看所有日报弹窗 -->
+<div class="modal" id="all-daily-reports-modal">
+    <div class="modal-content" style="max-width: 900px;">
+        <div class="modal-header">
+            <h3>📊 电销日报汇总</h3>
+            <button class="modal-close" onclick="closeModal('all-daily-reports-modal')">&times;</button>
+        </div>
+        <div class="filter-bar" style="margin-bottom: 15px;">
+            <input type="date" id="report-search-start" class="form-control" style="width: 150px;" placeholder="开始日期">
+            <span>至</span>
+            <input type="date" id="report-search-end" class="form-control" style="width: 150px;" placeholder="结束日期">
+            <select id="report-search-sales" class="form-control" style="width: 120px;">
+                <option value="">全部人员</option>
+            </select>
+            <button class="btn btn-primary" onclick="searchDailyReports()">🔍 搜索</button>
+            <button class="btn btn-outline" onclick="exportDailyReports()">📥 导出</button>
+        </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>日期</th>
+                    <th>姓名</th>
+                    <th>📞</th>
+                    <th>📲</th>
+                    <th>💬</th>
+                    <th>📅</th>
+                    <th>备注</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="all-reports-tbody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 管理员编辑业绩弹窗 -->
+<div class="modal" id="performance-edit-modal">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+            <h3>✏️ 修改业绩数据</h3>
+            <button class="modal-close" onclick="closeModal('performance-edit-modal')">&times;</button>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 500;">选择电销人员</label>
+            <select id="perf-edit-sales-select" class="form-control" onchange="loadPerformanceData()">
+                <option value="">-- 请选择 --</option>
+            </select>
+        </div>
+        
+        <form id="performance-edit-form">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div style="background: var(--bg); padding: 12px; border-radius: 8px;">
+                    <h4 style="margin: 0 0 10px 0; color: var(--primary); font-size: 14px;">📅 今日</h4>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label style="font-size: 12px;">电话拨打</label>
+                        <input type="number" class="form-control" id="perf-today-calls" min="0" value="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label style="font-size: 12px;">接通数量</label>
+                        <input type="number" class="form-control" id="perf-today-connected" min="0" value="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label style="font-size: 12px;">微信添加</label>
+                        <input type="number" class="form-control" id="perf-today-wechat" min="0" value="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label style="font-size: 12px;">预约上门</label>
+                        <input type="number" class="form-control" id="perf-today-appointments" min="0" value="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px;">进店数量</label>
+                        <input type="number" class="form-control" id="perf-today-arrived" min="0" value="0">
+                    </div>
+                </div>
+                <div style="background: var(--bg); padding: 12px; border-radius: 8px;">
+                    <h4 style="margin: 0 0 10px 0; color: var(--success); font-size: 14px;">📆 本周</h4>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label style="font-size: 12px;">电话拨打</label>
+                        <input type="number" class="form-control" id="perf-week-calls" min="0" value="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label style="font-size: 12px;">接通数量</label>
+                        <input type="number" class="form-control" id="perf-week-connected" min="0" value="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label style="font-size: 12px;">微信添加</label>
+                        <input type="number" class="form-control" id="perf-week-wechat" min="0" value="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label style="font-size: 12px;">预约上门</label>
+                        <input type="number" class="form-control" id="perf-week-appointments" min="0" value="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px;">进店数量</label>
+                        <input type="number" class="form-control" id="perf-week-arrived" min="0" value="0">
+                    </div>
+                </div>
+                <div style="background: var(--bg); padding: 12px; border-radius: 8px;">
+                    <h4 style="margin: 0 0 10px 0; color: var(--warning); font-size: 14px;">📆 本月</h4>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label style="font-size: 12px;">电话拨打</label>
+                        <input type="number" class="form-control" id="perf-month-calls" min="0" value="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label style="font-size: 12px;">接通数量</label>
+                        <input type="number" class="form-control" id="perf-month-connected" min="0" value="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label style="font-size: 12px;">微信添加</label>
+                        <input type="number" class="form-control" id="perf-month-wechat" min="0" value="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label style="font-size: 12px;">预约上门</label>
+                        <input type="number" class="form-control" id="perf-month-appointments" min="0" value="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px;">进店数量</label>
+                        <input type="number" class="form-control" id="perf-month-arrived" min="0" value="0">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 成交数据单独一排 -->
+            <div style="background: linear-gradient(135deg, rgba(103,194,58,0.1), rgba(245,108,108,0.1)); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <h4 style="margin: 0 0 15px 0; color: var(--danger);">💰 成交数据</h4>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px;">今日成交</label>
+                        <input type="number" class="form-control" id="perf-today-deals" min="0" value="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px;">本周成交</label>
+                        <input type="number" class="form-control" id="perf-week-deals" min="0" value="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px;">本月成交</label>
+                        <input type="number" class="form-control" id="perf-month-deals" min="0" value="0">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label style="font-size: 12px;">成交金额（元）</label>
+                        <input type="number" class="form-control" id="perf-deal-amount" min="0" value="0" placeholder="累计成交金额">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary" onclick="savePerformanceData()">💾 保存修改</button>
+                <button type="button" class="btn btn-outline" onclick="closeModal('performance-edit-modal')">取消</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// ========== 全局数据 ==========
+var users = {
+    'admin': { password: 'admin888', name: '管理员', role: 'admin' },
+    'nian': { password: '888888', name: '念老师', role: 'sales' },
+    'zhou': { password: '888888', name: '周老师', role: 'sales' },
+    'xiao': { password: '888888', name: '肖老师', role: 'sales' },
+    'guo': { password: '888888', name: '郭老师', role: 'sales' }
+};
+
+var currentUser = null;
+
+// ========== 权限控制函数 ==========
+function isAdmin() {
+    return currentUser && currentUser.username === 'admin';
+}
+
+function isOwnData(createdBy) {
+    return currentUser && (currentUser.username === createdBy || isAdmin());
+}
+
+// 获取当前用户对应的团队成员ID
+function getCurrentTeamMemberId() {
+    if (!currentUser) return null;
+    // 根据用户名映射到team中的id
+    var usernameToTeamId = {
+        'admin': null,
+        'nian': 1,
+        'zhou': 2,
+        'xiao': 3,
+        'guo': 4,
+        'sales1': 1,
+        'sales2': 2,
+        'sales3': 3,
+        'sales4': 4,
+        'planner': 5
+    };
+    return usernameToTeamId[currentUser.username] || null;
+}
+
+var appData = {
+    team: [
+        { id: 1, name: '念老师', role: 'sales', phone: '13800138001' },
+        { id: 2, name: '周老师', role: 'sales', phone: '13800138002' },
+        { id: 3, name: '肖老师', role: 'sales', phone: '13800138003' },
+        { id: 4, name: '郭老师', role: 'sales', phone: '13800138004' },
+        { id: 5, name: '陈规划', role: 'planner', phone: '13800138005' }
+    ],
+    plannners: [
+        { id: 1, name: '王老师', phone: '13900139001' },
+        { id: 2, name: '李老师', phone: '13900139002' },
+        { id: 3, name: '张老师', phone: '13900139003' }
+    ],
+    appointments: [],  // 预约数据将在initApp时自动初始化
+    customers: [],
+    tasks: [],
+    serviceStages: [
+        { id: 1, name: '签单仪式' },
+        { id: 2, name: '建档启动' },
+        { id: 3, name: '初访咨询' },
+        { id: 4, name: '方案交付' },
+        { id: 5, name: '方案调整' },
+        { id: 6, name: '填报指导' },
+        { id: 7, name: '录取追踪' },
+        { id: 8, name: '入学服务' }
+    ],
+    cases: [
+        { id: 1, studentName: '张同学', score: 568, type: 'science', school: '云南大学', major: '计算机科学与技术', year: 2024, story: '理科568分，成功进入云南大学计算机专业', tags: ['计算机', '云南大学', '211'] },
+        { id: 2, studentName: '李同学', score: 592, type: 'science', school: '华中科技大学', major: '电子信息工程', year: 2024, story: '理科592分，冲刺成功进入华科', tags: ['电子信息', '985'] },
+        { id: 3, studentName: '王同学', score: 521, type: 'arts', school: '云南师范大学', major: '汉语言文学', year: 2024, story: '文科521分，压线进入理想专业', tags: ['师范', '文科'] },
+        { id: 4, studentName: '陈同学', score: 635, type: 'science', school: '北京大学', major: '物理学', year: 2024, story: '高分考生，通过强基计划进入北大', tags: ['物理', '985', '强基计划'] }
+    ],
+    salesDailyStats: []  // 电销日报统计数据
+};
+
+// ========== 登录功能 ==========
+function doLogin() {
+    var username = document.getElementById('username').value.trim();
+    var password = document.getElementById('password').value;
+    var error = document.getElementById('loginError');
+    
+    if (!username || !password) {
+        error.textContent = '请输入账号和密码';
+        error.style.display = 'block';
+        return;
+    }
+    
+    if (users[username] && users[username].password === password) {
+        currentUser = { username: username, name: users[username].name, role: users[username].role };
+        localStorage.setItem('gaobao_user', JSON.stringify(currentUser));
+        
+        // 登录时强制重置team数据
+        appData.team = [
+            { id: 1, name: '念老师', role: 'sales', phone: '13800138001' },
+            { id: 2, name: '周老师', role: 'sales', phone: '13800138002' },
+            { id: 3, name: '肖老师', role: 'sales', phone: '13800138003' },
+            { id: 4, name: '郭老师', role: 'sales', phone: '13800138004' },
+            { id: 5, name: '陈规划', role: 'planner', phone: '13800138005' }
+        ];
+        
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('mainPage').style.display = 'block';
+        initApp();
+    } else {
+        error.textContent = '账号或密码错误';
+        error.style.display = 'block';
+    }
+}
+
+function logout() {
+    currentUser = null;
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    document.getElementById('loginPage').style.display = 'flex';
+    document.getElementById('mainPage').style.display = 'none';
+}
+
+// ========== 电销日报功能 ==========
+// 获取当前日期字符串
+function getTodayString() {
+    return new Date().toISOString().split('T')[0];
+}
+
+// 获取当前电销人员信息
+function getCurrentSalesInfo() {
+    if (!currentUser) return { id: null, name: '未知' };
+    var usernameToTeamId = {
+        'admin': null,
+        'nian': 1,
+        'zhou': 2,
+        'xiao': 3,
+        'guo': 4,
+        'sales1': 1,
+        'sales2': 2,
+        'sales3': 3,
+        'sales4': 4,
+        'planner': 5
+    };
+    var teamId = usernameToTeamId[currentUser.username] || null;
+    var teamMember = teamId ? appData.team.find(function(t) { return t.id === teamId; }) : null;
+    return {
+        id: teamId,
+        name: teamMember ? teamMember.name : currentUser.name
+    };
+}
+
+// 打开日报弹窗
+function openDailyReportModal() {
+    var salesInfo = getCurrentSalesInfo();
+    var today = getTodayString();
+    
+    // 检查今日是否已填报
+    var todayReport = appData.salesDailyStats.find(function(s) {
+        return s.date === today && s.salesId === salesInfo.id;
+    });
+    
+    // 显示状态提示
+    var alertBox = document.getElementById('daily-report-alert');
+    if (todayReport) {
+        alertBox.style.display = 'block';
+        alertBox.style.background = 'rgba(103,194,58,0.1)';
+        alertBox.style.borderLeft = '3px solid #67C23A';
+        alertBox.innerHTML = '<span style="color: #67C23A;">✅ 今日已填报，可修改更新</span>';
+    } else {
+        alertBox.style.display = 'block';
+        alertBox.style.background = 'rgba(230,162,60,0.1)';
+        alertBox.style.borderLeft = '3px solid #E6A23C';
+        alertBox.innerHTML = '<span style="color: #E6A23C;">⚠️ 今日尚未填报，请填写今日工作数据</span>';
+    }
+    
+    // 填充表单
+    if (todayReport) {
+        document.getElementById('report-calls').value = todayReport.calls || 0;
+        document.getElementById('report-connected').value = todayReport.connected || 0;
+        document.getElementById('report-wechat').value = todayReport.wechatAdded || 0;
+        document.getElementById('report-appointments').value = todayReport.appointments || 0;
+        document.getElementById('report-notes').value = todayReport.notes || '';
+    } else {
+        document.getElementById('daily-report-form').reset();
+    }
+    
+    // 渲染历史记录
+    renderDailyReportHistory();
+    
+    // 更新模态框标题
+    document.getElementById('daily-report-modal-title').textContent = salesInfo.name + ' - 电销日报';
+    
+    openModal('daily-report-modal');
+}
+
+// 保存日报
+function saveDailyReport() {
+    var salesInfo = getCurrentSalesInfo();
+    if (!salesInfo.id) {
+        alert('只有电销人员可以填写日报');
+        return;
+    }
+    
+    var calls = parseInt(document.getElementById('report-calls').value) || 0;
+    var connected = parseInt(document.getElementById('report-connected').value) || 0;
+    var wechatAdded = parseInt(document.getElementById('report-wechat').value) || 0;
+    var appointments = parseInt(document.getElementById('report-appointments').value) || 0;
+    var notes = document.getElementById('report-notes').value.trim();
+    
+    var today = getTodayString();
+    
+    // 查找是否已有今日记录
+    var existingIndex = appData.salesDailyStats.findIndex(function(s) {
+        return s.date === today && s.salesId === salesInfo.id;
+    });
+    
+    var report = {
+        date: today,
+        salesId: salesInfo.id,
+        salesName: salesInfo.name,
+        calls: calls,
+        connected: connected,
+        wechatAdded: wechatAdded,
+        appointments: appointments,
+        notes: notes,
+        updatedAt: new Date().toISOString()
+    };
+    
+    if (existingIndex > -1) {
+        report.createdAt = appData.salesDailyStats[existingIndex].createdAt;
+        appData.salesDailyStats[existingIndex] = report;
+    } else {
+        report.createdAt = new Date().toISOString();
+        appData.salesDailyStats.push(report);
+    }
+    
+    saveData();
+    
+    // 更新数据看板的快速统计
+    updateTodayStats();
+    updateDashboardReportStatus();
+    
+    // 关闭弹窗
+    closeModal('daily-report-modal');
+    
+    alert('日报保存成功！');
+}
+
+// 渲染日报历史记录
+function renderDailyReportHistory() {
+    var salesInfo = getCurrentSalesInfo();
+    var container = document.getElementById('daily-report-history');
+    
+    var myReports = appData.salesDailyStats.filter(function(s) {
+        return s.salesId === salesInfo.id;
+    }).sort(function(a, b) {
+        return b.date.localeCompare(a.date); // 按日期倒序
+    }).slice(0, 5); // 只显示最近5条
+    
+    if (myReports.length === 0) {
+        container.innerHTML = '<div class="empty-state" style="padding: 20px;">暂无日报记录</div>';
+        return;
+    }
+    
+    var intentMap = { A: { label: 'A', class: 'badge-danger' }, B: { label: 'B', class: 'badge-warning' }, C: { label: 'C', class: 'badge-primary' }, D: { label: 'D', class: 'badge-success' } };
+    
+    container.innerHTML = myReports.map(function(r) {
+        return '<div style="padding: 10px; background: var(--bg); border-radius: 6px; margin-bottom: 8px;">' +
+            '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">' +
+            '<strong style="color: var(--primary);">' + r.date + '</strong>' +
+            '<span style="font-size: 12px; color: var(--text-light);">' + (r.notes ? r.notes.substring(0, 20) + '...' : '') + '</span>' +
+            '</div>' +
+            '<div style="display: flex; gap: 15px; font-size: 13px;">' +
+            '<span>📞</span><span>' + r.calls + '</span>' +
+            '<span>📲</span><span>' + r.connected + '</span>' +
+            '<span>💬</span><span>' + r.wechatAdded + '</span>' +
+            '<span>📅</span><span>' + r.appointments + '</span>' +
+            '</div>' +
+            '</div>';
+    }).join('');
+}
+
+// 更新今日统计显示
+function updateTodayStats() {
+    var salesInfo = getCurrentSalesInfo();
+    var today = getTodayString();
+    var todayReport = appData.salesDailyStats.find(function(s) {
+        return s.date === today && s.salesId === salesInfo.id;
+    });
+    
+    document.getElementById('today-calls').textContent = todayReport ? todayReport.calls : 0;
+    document.getElementById('today-connected').textContent = todayReport ? todayReport.connected : 0;
+    document.getElementById('today-wechat').textContent = todayReport ? todayReport.wechatAdded : 0;
+    document.getElementById('today-appointments').textContent = todayReport ? todayReport.appointments : 0;
+}
+
+// 更新数据看板日报状态
+function updateDashboardReportStatus() {
+    var salesInfo = getCurrentSalesInfo();
+    var today = getTodayString();
+    var todayReport = appData.salesDailyStats.find(function(s) {
+        return s.date === today && s.salesId === salesInfo.id;
+    });
+    
+    var submittedBadge = document.getElementById('daily-report-status-badge');
+    var pendingBadge = document.getElementById('daily-report-status-pending');
+    
+    if (todayReport) {
+        submittedBadge.style.display = 'inline-block';
+        pendingBadge.style.display = 'none';
+    } else {
+        submittedBadge.style.display = 'none';
+        pendingBadge.style.display = 'inline-block';
+    }
+}
+
+// 快速登记客户
+function quickAddCustomer() {
+    var name = document.getElementById('quick-customer-name').value.trim();
+    var phone = document.getElementById('quick-customer-phone').value.trim();
+    var intent = document.getElementById('quick-customer-intent').value;
+    var salesInfo = getCurrentSalesInfo();
+    
+    if (!name) {
+        alert('请输入客户姓名');
+        return;
+    }
+    if (!phone) {
+        alert('请输入客户电话');
+        return;
+    }
+    
+    // 检查是否已存在该客户
+    var existing = appData.customers.find(function(c) {
+        return c.phone === phone || c.name === name;
+    });
+    
+    if (existing) {
+        if (confirm('已存在客户【' + existing.name + '】，是否更新其信息？')) {
+            existing.owner = salesInfo.id;
+            existing.intent = intent;
+            existing.intentLevel = intent === 'A' ? '高' : (intent === 'B' ? '中' : (intent === 'C' ? '低' : '低'));
+            existing.status = 'wechat'; // 自动标记为已加微信
+            saveData();
+            alert('客户信息已更新！');
+        }
+    } else {
+        var intentMap = { 'A': '高', 'B': '中', 'C': '低', 'D': '低' };
+        var newCustomer = {
+            id: Date.now(),
+            name: name,
+            phone: phone,
+            owner: salesInfo.id,
+            intent: intent,
+            intentLevel: intentMap[intent],
+            status: 'wechat', // 来源为微信添加
+            source: 'wechat_added', // 来源标记
+            createdAt: new Date().toISOString(),
+            createdBy: currentUser ? currentUser.username : 'admin'
+        };
+        appData.customers.push(newCustomer);
+        saveData();
+        alert('客户【' + name + '】登记成功！');
+    }
+    
+    // 清空表单
+    document.getElementById('quick-customer-form').reset();
+    
+    // 更新客户列表
+    renderCustomers();
+    renderPotentialCustomers();
+}
+
+// 打开所有日报汇总（管理员用）
+function openAllDailyReports() {
+    // 填充人员筛选下拉框
+    var salesSelect = document.getElementById('report-search-sales');
+    var sales = appData.team.filter(function(t) { return t.role === 'sales'; });
+    salesSelect.innerHTML = '<option value="">全部人员</option>' + 
+        sales.map(function(s) { return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('');
+    
+    // 设置默认日期范围（本月）
+    var today = new Date();
+    var firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    document.getElementById('report-search-start').value = firstDay.toISOString().split('T')[0];
+    document.getElementById('report-search-end').value = today.toISOString().split('T')[0];
+    
+    renderAllDailyReports();
+    openModal('all-daily-reports-modal');
+}
+
+// 渲染所有日报
+function renderAllDailyReports() {
+    var tbody = document.getElementById('all-reports-tbody');
+    var startDate = document.getElementById('report-search-start').value;
+    var endDate = document.getElementById('report-search-end').value;
+    var salesId = document.getElementById('report-search-sales').value;
+    
+    var reports = appData.salesDailyStats.filter(function(r) {
+        if (startDate && r.date < startDate) return false;
+        if (endDate && r.date > endDate) return false;
+        if (salesId && r.salesId != salesId) return false;
+        return true;
+    }).sort(function(a, b) {
+        return b.date.localeCompare(a.date) || b.salesId - a.salesId;
+    });
+    
+    if (reports.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-state">暂无日报记录</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = reports.map(function(r) {
+        var deleteBtn = isAdmin() ? '<button class="btn btn-sm btn-danger" onclick="deleteDailyReport(\'' + r.date + '\', ' + r.salesId + ')">删除</button>' : '';
+        return '<tr>' +
+            '<td>' + r.date + '</td>' +
+            '<td><strong>' + r.salesName + '</strong></td>' +
+            '<td>' + r.calls + '</td>' +
+            '<td>' + r.connected + '</td>' +
+            '<td>' + r.wechatAdded + '</td>' +
+            '<td>' + r.appointments + '</td>' +
+            '<td><span title="' + (r.notes || '') + '">' + (r.notes ? r.notes.substring(0, 15) + '...' : '-') + '</span></td>' +
+            '<td>' + deleteBtn + '</td>' +
+            '</tr>';
+    }).join('');
+}
+
+// 搜索日报
+function searchDailyReports() {
+    renderAllDailyReports();
+}
+
+// 删除日报
+function deleteDailyReport(date, salesId) {
+    if (!confirm('确定要删除这条日报记录吗？')) return;
+    
+    var index = appData.salesDailyStats.findIndex(function(s) {
+        return s.date === date && s.salesId === salesId;
+    });
+    
+    if (index > -1) {
+        appData.salesDailyStats.splice(index, 1);
+        saveData();
+        renderAllDailyReports();
+        updateTodayStats();
+        updateDashboardReportStatus();
+        alert('日报已删除！');
+    }
+}
+
+// 导出日报
+function exportDailyReports() {
+    var startDate = document.getElementById('report-search-start').value;
+    var endDate = document.getElementById('report-search-end').value;
+    var salesId = document.getElementById('report-search-sales').value;
+    
+    var reports = appData.salesDailyStats.filter(function(r) {
+        if (startDate && r.date < startDate) return false;
+        if (endDate && r.date > endDate) return false;
+        if (salesId && r.salesId != salesId) return false;
+        return true;
+    }).sort(function(a, b) {
+        return b.date.localeCompare(a.date) || b.salesId - a.salesId;
+    });
+    
+    if (reports.length === 0) {
+        alert('没有可导出的数据');
+        return;
+    }
+    
+    var csv = '日期,姓名,电话拨打,接通数量,微信添加,预约确定,备注\n';
+    reports.forEach(function(r) {
+        csv += r.date + ',' + r.salesName + ',' + r.calls + ',' + r.connected + ',' + r.wechatAdded + ',' + r.appointments + ',' + (r.notes || '') + '\n';
+    });
+    
+    var blob = new Blob([csv], { type: 'text/csv' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = '电销日报_' + (startDate || '开始') + '_' + (endDate || '结束') + '.csv';
+    a.click();
+}
+
+// ========== 初始化 ==========
+function initApp() {
+    loadData();
+    updateCurrentDate();
+    initNavigation();
+    initTabs();
+    initFilters();
+    initForms();
+    initAppointmentData();  // 初始化预约演示数据
+    renderTasks();
+    renderCustomers();
+    renderPerformance();
+    populateDashboardSalesSelect(); // 动态填充数据看板人员选择下拉框
+    populatePerformanceSalesSelect(); // 动态填充绩效看板人员选择下拉框
+    renderServices();           // 渲染付费客户列表
+    renderPotentialCustomers(); // 渲染待跟进客户列表
+    renderTeam();
+    renderCases();
+    renderSchedule();
+    // 初始化日报相关
+    initDailyReport();
+}
+
+// ========== 数据加载/保存 ==========
+function loadData() {
+    // 强制重置team数据为默认值（避免localStorage污染）
+    appData.team = [
+        { id: 1, name: '念老师', role: 'sales', phone: '13800138001' },
+        { id: 2, name: '周老师', role: 'sales', phone: '13800138002' },
+        { id: 3, name: '肖老师', role: 'sales', phone: '13800138003' },
+        { id: 4, name: '郭老师', role: 'sales', phone: '13800138004' },
+        { id: 5, name: '陈规划', role: 'planner', phone: '13800138005' }
+    ];
+    
+    var saved = localStorage.getItem('gaobao_system_data');
+    if (saved) {
+        try {
+            var parsed = JSON.parse(saved);
+            // 只合并非team的数据
+            for (var key in parsed) {
+                if (key !== 'team') {
+                    appData[key] = parsed[key];
+                }
+            }
+            // 确保salesDailyStats数组存在
+            if (!appData.salesDailyStats) {
+                appData.salesDailyStats = [];
+            }
+            // 确保performance对象存在
+            if (!appData.performance) {
+                appData.performance = {};
+            }
+        } catch(e) {
+            console.log('[DEBUG] JSON解析错误:', e);
+        }
+    }
+}
+
+function saveData() {
+    localStorage.setItem('gaobao_system_data', JSON.stringify(appData));
+}
+
+// ========== 日报初始化 ==========
+function initDailyReport() {
+    // 日报表单提交
+    document.getElementById('daily-report-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveDailyReport();
+    });
+    
+    // 快速登记客户表单提交
+    document.getElementById('quick-customer-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        quickAddCustomer();
+    });
+    
+    // 更新今日统计和状态
+    updateTodayStats();
+    updateDashboardReportStatus();
+}
+
+// ========== 日期显示 ==========
+function updateCurrentDate() {
+    var now = new Date();
+    var options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+    document.getElementById('currentDate').textContent = now.toLocaleDateString('zh-CN', options);
+}
+
+// ========== 导航 ==========
+function initNavigation() {
+    document.querySelectorAll('.nav-item').forEach(function(item) {
+        item.addEventListener('click', function() {
+            var page = this.dataset.page;
+            showPage(page);
+        });
+    });
+}
+
+function showPage(pageName) {
+    document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+    document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+    document.getElementById('page-' + pageName).classList.add('active');
+    document.querySelector('.nav-item[data-page="' + pageName + '"]').classList.add('active');
+    
+    // 切换到服务进度页面时渲染两个客户列表
+    if (pageName === 'services') {
+        renderPotentialCustomers();
+        renderServices();
+    }
+    // 切换到系统设置页面时重新渲染团队成员
+    if (pageName === 'settings') {
+        renderTeam();
+    }
+    // 切换到预约时间表页面时渲染预约数据
+    if (pageName === 'schedule') {
+        renderSchedule();
+    }
+}
+
+// ========== 标签页 ==========
+function initTabs() {
+    document.querySelectorAll('.tab').forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            var tabId = this.dataset.tab;
+            var container = this.closest('.card, .page');
+            container.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+            container.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+            this.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        });
+    });
+}
+
+// ========== 筛选器 ==========
+function initFilters() {
+    document.getElementById('customer-filter-status').addEventListener('change', renderCustomers);
+    document.getElementById('customer-filter-intent').addEventListener('change', renderCustomers);
+    document.getElementById('customer-search').addEventListener('input', renderCustomers);
+    document.getElementById('service-stage-filter').addEventListener('change', renderServices);
+}
+
+// ========== 表单 ==========
+function initForms() {
+    document.getElementById('task-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveTask();
+    });
+    document.getElementById('customer-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveCustomer();
+    });
+    document.getElementById('followup-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveFollowup();
+    });
+    document.getElementById('appointment-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveAppointment();
+    });
+    document.getElementById('service-edit-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveServiceEdit();
+    });
+    document.getElementById('team-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveTeamMember();
+    });
+}
+
+// ========== 模态框 ==========
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+function openTaskModal() {
+    document.getElementById('task-form').reset();
+    document.getElementById('task-deadline').value = new Date().toISOString().split('T')[0];
+    populateTeamSelect('task-assignee');
+    openModal('task-modal');
+}
+
+function openCustomerModal(id) {
+    // 如果是编辑模式，检查权限
+    if (id) {
+        var c = appData.customers.find(function(x) { return x.id === id; });
+        if (c) {
+            var canEdit = isAdmin() || (currentUser && (currentUser.username === c.createdBy || c.owner == getCurrentTeamMemberId()));
+            if (!canEdit) {
+                alert('您没有权限编辑此客户');
+                return;
+            }
+        }
+    }
+    
+    document.getElementById('customer-form').reset();
+    document.getElementById('customer-id').value = id || '';
+    populateTeamSelect('customer-owner');
+    if (id) {
+        var c = appData.customers.find(function(x) { return x.id === id; });
+        if (c) {
+            document.getElementById('customer-name').value = c.name;
+            document.getElementById('customer-phone').value = c.phone;
+            document.getElementById('customer-student').value = c.student || '';
+            document.getElementById('customer-score').value = c.score || '';
+            document.getElementById('customer-intent').value = c.intent;
+            document.getElementById('customer-owner').value = c.owner;
+        }
+    }
+    openModal('customer-modal');
+}
+
+function openFollowupModal(customerId) {
+    document.getElementById('followup-customer-id').value = customerId;
+    document.getElementById('followup-form').reset();
+    openModal('followup-modal');
+}
+
+// ========== 任务管理 ==========
+function saveTask() {
+    var task = {
+        id: Date.now(),
+        name: document.getElementById('task-name').value,
+        assignee: document.getElementById('task-assignee').value,
+        deadline: document.getElementById('task-deadline').value,
+        priority: document.getElementById('task-priority').value,
+        status: 'pending',
+        createdBy: currentUser ? currentUser.username : 'admin'
+    };
+    appData.tasks.push(task);
+    saveData();
+    renderTasks();
+    closeModal('task-modal');
+}
+
+function renderTasks(filter) {
+    filter = filter || 'all';
+    var tbody = document.getElementById('tasks-tbody');
+    var tasks = appData.tasks.filter(function(t) {
+        if (filter === 'pending') return t.status === 'pending';
+        if (filter === 'completed') return t.status === 'completed';
+        return true;
+    });
+    
+    if (tasks.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">暂无任务</td></tr>';
+        return;
+    }
+    
+    var priorityMap = { low: { label: '低', class: 'badge-success' }, medium: { label: '中', class: 'badge-primary' }, high: { label: '高', class: 'badge-warning' }, urgent: { label: '紧急', class: 'badge-danger' } };
+    
+    tbody.innerHTML = tasks.map(function(task) {
+        var assignee = appData.team.find(function(t) { return t.id == task.assignee; });
+        // 只有管理员可以删除任务
+        var deleteBtn = isAdmin() ? '<button class="btn btn-sm btn-danger" onclick="deleteTask(' + task.id + ')">删除</button>' : '<button class="btn btn-sm btn-danger" disabled title="仅管理员可删除">删除</button>';
+        return '<tr><td>' + task.name + '</td><td>' + (assignee ? assignee.name : '-') + '</td><td>' + task.deadline + '</td><td><span class="badge ' + priorityMap[task.priority].class + '">' + priorityMap[task.priority].label + '</span></td><td><span class="badge ' + (task.status === 'completed' ? 'badge-success' : 'badge-warning') + '">' + (task.status === 'completed' ? '已完成' : '待完成') + '</span></td><td>' + (task.status === 'pending' ? '<button class="btn btn-sm btn-success" onclick="completeTask(' + task.id + ')">完成</button>' : '') + ' ' + deleteBtn + '</td></tr>';
+    }).join('');
+}
+
+function completeTask(id) {
+    var t = appData.tasks.find(function(x) { return x.id === id; });
+    if (t) { t.status = 'completed'; saveData(); renderTasks(); }
+}
+
+function deleteTask(id) {
+    if (confirm('确定要删除这个任务吗？')) {
+        appData.tasks = appData.tasks.filter(function(t) { return t.id !== id; });
+        saveData();
+        renderTasks();
+    }
+}
+
+function filterTasks(filter) { renderTasks(filter); }
+
+// ========== 客户管理 ==========
+var currentDealStatusFilter = 'all';
+
+function filterByDealStatus(status) {
+    currentDealStatusFilter = status;
+    document.querySelectorAll('.filter-btn[data-deal-status]').forEach(function(btn) {
+        btn.classList.remove('active');
+        if (btn.dataset.dealStatus === status) btn.classList.add('active');
+    });
+    renderCustomers();
+}
+
+function getCustomerDealStatus(c) {
+    if (c.status === 'deal') {
+        // 已成交客户，检查是否付清尾款
+        if (c.paymentType === 'deposit_balance' && !c.balancePaid) {
+            return { icon: '⏳', label: '待补尾款', class: 'status-pending-deal', type: 'deal' };
+        }
+        return { icon: '🔴', label: '已成交', class: 'status-success-deal', type: 'deal' };
+    }
+    if (c.status === 'visit') return { icon: '🔵', label: '未成交', class: 'status-failed-deal', type: 'no-deal' };
+    if (['contacted', 'wechat', 'new'].indexOf(c.status) > -1) return { icon: '🟢', label: '未到店', class: 'status-pending-deal', type: 'no-visit' };
+    return { icon: '🟢', label: '未到店', class: 'status-pending-deal', type: 'no-visit' };
+}
+
+function saveCustomer() {
+    var id = document.getElementById('customer-id').value;
+    // 将意向度字母转为中文
+    var intentMap = { A: '高', B: '中', C: '低', D: '低' };
+    var intentLetter = document.getElementById('customer-intent').value;
+    var c = {
+        name: document.getElementById('customer-name').value,
+        phone: document.getElementById('customer-phone').value,
+        student: document.getElementById('customer-student').value,
+        score: document.getElementById('customer-score').value,
+        intent: intentLetter,  // 保留字母格式用于客户列表显示
+        intentLevel: intentMap[intentLetter] || '中',  // 统一意向度字段
+        owner: document.getElementById('customer-owner').value,
+        status: 'new',
+        createdAt: new Date().toISOString(),
+        createdBy: currentUser ? currentUser.username : 'admin'
+    };
+    
+    if (id) {
+        var idx = appData.customers.findIndex(function(x) { return x.id == id; });
+        if (idx > -1) appData.customers[idx] = { ...appData.customers[idx], ...c };
+    } else {
+        c.id = Date.now();
+        appData.customers.push(c);
+    }
+    saveData();
+    renderCustomers();
+    renderPotentialCustomers();  // 同时更新服务进度的待跟进客户列表
+    closeModal('customer-modal');
+}
+
+function renderCustomers() {
+    var tbody = document.getElementById('customers-tbody');
+    var statusFilter = document.getElementById('customer-filter-status').value;
+    var intentFilter = document.getElementById('customer-filter-intent').value;
+    var search = document.getElementById('customer-search').value.toLowerCase();
+    
+    var customers = appData.customers.filter(function(c) {
+        if (statusFilter && c.status !== statusFilter) return false;
+        if (intentFilter && c.intent !== intentFilter) return false;
+        if (search && !c.name.toLowerCase().includes(search) && !(c.phone && c.phone.includes(search))) return false;
+        return true;
+    });
+    
+    if (currentDealStatusFilter && currentDealStatusFilter !== 'all') {
+        customers = customers.filter(function(c) {
+            return getCustomerDealStatus(c).type === currentDealStatusFilter;
+        });
+    }
+    
+    var statusMap = { new: { label: '新增', class: 'badge-primary' }, contacted: { label: '已联系', class: 'badge-warning' }, wechat: { label: '已加微信', class: 'badge-primary' }, visit: { label: '已上门', class: 'badge-warning' }, deal: { label: '已成交', class: 'badge-success' } };
+    var intentMap = { A: { label: 'A', class: 'badge-danger' }, B: { label: 'B', class: 'badge-warning' }, C: { label: 'C', class: 'badge-primary' }, D: { label: 'D', class: 'badge-success' } };
+    
+    if (customers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="empty-state">暂无客户数据</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = customers.map(function(c) {
+        var owner = appData.team.find(function(t) { return t.id == c.owner; });
+        var dealStatus = getCustomerDealStatus(c);
+        
+        // 金额显示（支持定金+尾款）
+        var amountDisplay = '-';
+        if (c.amount) {
+            amountDisplay = '¥' + Number(c.amount).toLocaleString();
+            if (c.paymentType === 'deposit_balance' && !c.balancePaid) {
+                amountDisplay += '<br><small style="color: var(--warning);">已付¥' + Number(c.paidAmount || c.depositAmount || 0).toLocaleString() + '</small>';
+            }
+        }
+        
+        // 权限控制：编辑和删除按钮
+        var canEdit = isAdmin() || (currentUser && (currentUser.username === c.createdBy || c.owner == getCurrentTeamMemberId()));
+        var editBtn = canEdit ? '<button class="btn btn-sm btn-outline" onclick="openCustomerModal(' + c.id + ')">编辑</button>' : '<button class="btn btn-sm btn-outline" disabled title="无权编辑">编辑</button>';
+        var deleteBtn = isAdmin() ? '<button class="btn btn-sm btn-danger" onclick="deleteCustomer(' + c.id + ')">删除</button>' : '<button class="btn btn-sm btn-danger" disabled title="仅管理员可删除">删除</button>';
+        return '<tr><td>' + c.name + '</td><td>' + c.phone + '</td><td>' + (c.score || '-') + '</td><td><span class="badge ' + intentMap[c.intent].class + '">' + intentMap[c.intent].label + '</span></td><td><span class="badge ' + statusMap[c.status].class + '">' + statusMap[c.status].label + '</span></td><td><span class="status-tag ' + dealStatus.class + '">' + dealStatus.icon + ' ' + dealStatus.label + '</span></td><td>' + amountDisplay + '</td><td>' + (owner ? owner.name : '-') + '</td><td><button class="btn btn-sm btn-outline" onclick="openFollowupModal(' + c.id + ')">跟进</button> ' + editBtn + ' ' + deleteBtn + '</td></tr>';
+    }).join('');
+}
+
+function saveFollowup() {
+    var customerId = document.getElementById('followup-customer-id').value;
+    var followupType = document.getElementById('followup-type').value;
+    var customer = appData.customers.find(function(c) { return c.id == customerId; });
+    
+    if (customer) {
+        if (followupType === 'deal') {
+            window.pendingDealCustomerId = customerId;
+            closeModal('followup-modal');
+            openModal('deal-modal');
+            return;
+        }
+        customer.followups = customer.followups || [];
+        customer.followups.push({ type: followupType, content: document.getElementById('followup-content').value, createdAt: new Date().toISOString() });
+        customer.lastContact = new Date().toISOString();
+        if (followupType === 'wechat' && customer.status === 'new') {
+            customer.status = 'wechat';
+        } else if (followupType === 'visit') {
+            customer.status = 'visit';
+        }
+        saveData();
+        renderCustomers();
+        renderPotentialCustomers(); // 同步更新待跟进客户列表
+    }
+    closeModal('followup-modal');
+}
+
+function saveDealInfo() {
+    var customerId = window.pendingDealCustomerId;
+    var customer = appData.customers.find(function(c) { return c.id == customerId; });
+    if (customer) {
+        var paymentMethod = document.getElementById('deal-payment-method').value;
+        if (!paymentMethod) { alert('请选择付款方式'); return; }
+        
+        customer.paymentType = paymentMethod;
+        customer.dealDate = new Date().toISOString().split('T')[0];  // 记录成交日期
+        customer.status = 'deal';
+        customer.serviceProgress = 1;
+        customer.satisfaction = 5;
+        
+        // 处理定金+尾款模式
+        if (paymentMethod === 'deposit_balance') {
+            var depositAmount = parseFloat(document.getElementById('deal-deposit-amount').value);
+            var balanceAmount = parseFloat(document.getElementById('deal-balance-amount').value);
+            if (!depositAmount || !balanceAmount) { alert('请填写完整的定金和尾款金额'); return; }
+            
+            customer.depositAmount = depositAmount;
+            customer.balanceAmount = balanceAmount;
+            customer.amount = depositAmount + balanceAmount;  // 总金额
+            customer.paidAmount = depositAmount;  // 已付金额为定金
+            customer.balancePaid = false;  // 尾款未付
+        } else {
+            // 全款模式
+            var amount = document.getElementById('deal-amount').value;
+            if (!amount) { alert('请填写成交金额'); return; }
+            customer.amount = parseFloat(amount);
+            customer.paidAmount = parseFloat(amount);  // 已付金额等于总金额
+            customer.balancePaid = true;  // 全款已付
+            customer.depositAmount = 0;
+            customer.balanceAmount = 0;
+        }
+        
+        saveData();
+        renderCustomers();          // 更新客户列表
+        renderServices();          // 更新付费客户服务进度
+        renderPotentialCustomers(); // 更新待跟进客户列表（移除已成交）
+        closeModal('deal-modal');
+    }
+}
+
+// 切换定金/尾款字段显示
+function toggleDepositFields() {
+    var paymentMethod = document.getElementById('deal-payment-method').value;
+    var depositFields = document.getElementById('deposit-balance-fields');
+    var fullField = document.getElementById('deal-full-amount-field');
+    
+    if (paymentMethod === 'deposit_balance') {
+        depositFields.style.display = 'block';
+        fullField.style.display = 'none';
+    } else {
+        depositFields.style.display = 'none';
+        fullField.style.display = 'block';
+    }
+}
+
+// 更新总金额显示
+function updateTotalAmount() {
+    var depositAmount = parseFloat(document.getElementById('deal-deposit-amount').value) || 0;
+    var balanceAmount = parseFloat(document.getElementById('deal-balance-amount').value) || 0;
+    var total = depositAmount + balanceAmount;
+    
+    document.getElementById('deal-total-display').textContent = '¥' + total.toLocaleString();
+    document.getElementById('deal-paid-display').textContent = '¥' + depositAmount.toLocaleString();
+}
+
+// 打开补缴尾款弹窗
+function openBalancePaymentModal(id) {
+    var s = appData.customers.find(function(c) { return c.id === id && c.status === 'deal'; });
+    if (!s) return;
+    
+    window.pendingBalanceCustomerId = id;
+    
+    var infoHtml = '<div style="display: flex; justify-content: space-between; margin-bottom: 8px;">' +
+        '<span>客户：</span><strong>' + s.name + '</strong></div>' +
+        '<div style="display: flex; justify-content: space-between; margin-bottom: 8px;">' +
+        '<span>总金额：</span><strong style="color: var(--success);">¥' + Number(s.amount).toLocaleString() + '</strong></div>' +
+        '<div style="display: flex; justify-content: space-between; margin-bottom: 8px;">' +
+        '<span>已付（定金）：</span><strong style="color: var(--primary);">¥' + Number(s.paidAmount || s.depositAmount || 0).toLocaleString() + '</strong></div>' +
+        '<div style="display: flex; justify-content: space-between;">' +
+        '<span>待付尾款：</span><strong style="color: var(--danger);">¥' + Number(s.balanceAmount || 0).toLocaleString() + '</strong></div>';
+    
+    document.getElementById('balance-payment-info').innerHTML = infoHtml;
+    document.getElementById('balance-amount-input').value = s.balanceAmount || '';
+    document.getElementById('balance-payment-method').value = '';
+    
+    openModal('balance-payment-modal');
+}
+
+// 保存补缴尾款
+function saveBalancePayment() {
+    var customerId = window.pendingBalanceCustomerId;
+    var customer = appData.customers.find(function(c) { return c.id === customerId && c.status === 'deal'; });
+    if (!customer) return;
+    
+    var balanceAmount = parseFloat(document.getElementById('balance-amount-input').value);
+    var balanceMethod = document.getElementById('balance-payment-method').value;
+    
+    if (!balanceAmount) { alert('请输入尾款金额'); return; }
+    if (!balanceMethod) { alert('请选择尾款付款方式'); return; }
+    
+    // 更新客户数据
+    customer.paidAmount = (customer.paidAmount || customer.depositAmount || 0) + balanceAmount;
+    customer.balancePaid = true;
+    customer.balancePaidDate = new Date().toISOString().split('T')[0];
+    customer.balancePaymentMethod = balanceMethod;
+    
+    saveData();
+    renderServices();  // 更新付费客户列表
+    closeModal('balance-payment-modal');
+}
+
+function exportCustomers() {
+    var csv = appData.customers.map(function(c) { return c.name + ',' + c.phone + ',' + c.score + ',' + c.status; }).join('\n');
+    csv = '姓名,电话,分数,状态\n' + csv;
+    var blob = new Blob([csv], { type: 'text/csv' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'customers.csv';
+    a.click();
+}
+
+function deleteCustomer(id) {
+    // 权限检查
+    var customer = appData.customers.find(function(c) { return c.id === id; });
+    if (!customer) return;
+    if (!isAdmin() && currentUser && currentUser.username !== customer.createdBy && customer.owner != getCurrentTeamMemberId()) {
+        alert('您没有权限删除此客户');
+        return;
+    }
+    
+    if (confirm('确定要删除客户【' + customer.name + '】吗？此操作不可恢复！')) {
+        appData.customers = appData.customers.filter(function(c) { return c.id !== id; });
+        saveData();
+        renderCustomers();
+        renderPotentialCustomers();
+        renderServices();
+    }
+}
+
+// ========== 服务进度 - 添加客户 ==========
+function openAddServiceCustomer(id) {
+    // 如果是编辑模式，检查权限
+    if (id) {
+        var c = appData.customers.find(function(x) { return x.id === id; });
+        if (c) {
+            var canEdit = isAdmin() || (currentUser && (currentUser.username === c.createdBy || c.owner == getCurrentTeamMemberId()));
+            if (!canEdit) {
+                alert('您没有权限编辑此客户');
+                return;
+            }
+        }
+    }
+    
+    var form = document.getElementById('add-service-customer-form');
+    form.reset();
+    document.getElementById('service-customer-id').value = '';
+    document.getElementById('service-customer-modal-title').textContent = '添加客户';
+    
+    // 填充电销人员下拉框
+    populateServiceOwnerSelect();
+    
+    if (id) {
+        // 编辑模式
+        var c = appData.customers.find(function(x) { return x.id === id; });
+        if (c) {
+            document.getElementById('service-customer-id').value = c.id;
+            document.getElementById('service-customer-modal-title').textContent = '编辑客户';
+            document.getElementById('service-customer-name').value = c.name || '';
+            document.getElementById('service-customer-phone').value = c.phone || '';
+            document.getElementById('service-customer-student').value = c.student || '';
+            document.getElementById('service-customer-score').value = c.score || '';
+            document.getElementById('service-customer-intent').value = c.intentLevel || '';
+            document.getElementById('service-customer-owner').value = c.owner || '';
+            document.getElementById('service-customer-notes').value = c.notes || '';
+        }
+    }
+    
+    openModal('add-service-customer-modal');
+}
+
+function populateServiceOwnerSelect() {
+    var select = document.getElementById('service-customer-owner');
+    var sales = appData.team.filter(function(t) { return t.role === 'sales'; });
+    select.innerHTML = '<option value="">未分配</option>' + 
+        sales.map(function(s) { return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('');
+}
+
+function saveServiceCustomer() {
+    var id = document.getElementById('service-customer-id').value;
+    var name = document.getElementById('service-customer-name').value.trim();
+    var phone = document.getElementById('service-customer-phone').value.trim();
+    var student = document.getElementById('service-customer-student').value.trim();
+    var score = document.getElementById('service-customer-score').value;
+    var intentLevel = document.getElementById('service-customer-intent').value;
+    var owner = document.getElementById('service-customer-owner').value;
+    var notes = document.getElementById('service-customer-notes').value.trim();
+    
+    if (!name) { alert('请输入客户姓名'); return; }
+    if (!phone) { alert('请输入客户电话'); return; }
+    if (!intentLevel) { alert('请选择客户意向'); return; }
+    
+    // 将意向度中文转为字母格式
+    var intentMap = { '高': 'A', '中': 'B', '低': 'C' };
+    
+    var customerData = {
+        name: name,
+        phone: phone,
+        student: student,
+        score: score,
+        intentLevel: intentLevel,  // 保留中文格式
+        intent: intentMap[intentLevel] || 'B',  // 同时保存字母格式
+        owner: owner,
+        notes: notes,
+        status: 'new',
+        createdAt: new Date().toISOString(),
+        createdBy: currentUser ? currentUser.username : 'admin'
+    };
+    
+    if (id) {
+        // 编辑
+        var idx = appData.customers.findIndex(function(x) { return x.id == id; });
+        if (idx > -1) {
+            appData.customers[idx] = { ...appData.customers[idx], ...customerData };
+        }
+    } else {
+        // 新增
+        customerData.id = Date.now();
+        appData.customers.push(customerData);
+    }
+    
+    saveData();
+    renderCustomers();          // 更新客户列表
+    renderPotentialCustomers(); // 更新服务进度的待跟进客户列表
+    closeModal('add-service-customer-modal');
+}
+
+function renderPotentialCustomers() {
+    var tbody = document.getElementById('potential-tbody');
+    var search = document.getElementById('potential-search').value.toLowerCase();
+    var intentFilter = document.getElementById('potential-intent-filter').value;
+    
+    var customers = appData.customers.filter(function(c) { 
+        // 排除已成交客户
+        if (c.status === 'deal') return false;
+        // 搜索过滤
+        if (search && !c.name.toLowerCase().includes(search) && !(c.phone && c.phone.includes(search))) return false;
+        // 意向度过滤 - 支持两种字段名
+        if (intentFilter) {
+            var customerIntent = c.intentLevel || c.intent;
+            if (customerIntent !== intentFilter) return false;
+        }
+        return true;
+    });
+    
+    // 更新统计数字
+    document.getElementById('potential-customer-count').textContent = customers.length;
+    
+    if (customers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">暂无待跟进客户</td></tr>';
+        return;
+    }
+    
+    var intentMap = { A: '高', B: '中', C: '低', D: '低' };
+    tbody.innerHTML = customers.map(function(c) {
+        var owner = appData.team.find(function(t) { return t.id == c.owner; });
+        // 兼容两种意向度字段
+        var intentValue = c.intentLevel || intentMap[c.intent] || '-';
+        var intentClass = intentValue === '高' ? 'badge-danger' : (intentValue === '中' ? 'badge-warning' : 'badge-primary');
+        var statusLabel = c.status === 'new' ? '新增' : (c.status === 'contacted' ? '已联系' : (c.status === 'wechat' ? '已加微信' : '已上门'));
+        var statusClass = c.status === 'new' ? 'badge-primary' : (c.status === 'contacted' ? 'badge-warning' : 'badge-primary');
+        // 权限控制：编辑按钮
+        var canEdit = isAdmin() || (currentUser && (currentUser.username === c.createdBy || c.owner == getCurrentTeamMemberId()));
+        var editBtn = canEdit ? '<button class="btn btn-sm btn-primary" onclick="openAddServiceCustomer(' + c.id + ')">编辑</button>' : '<button class="btn btn-sm btn-primary" disabled title="无权编辑">编辑</button>';
+        return '<tr>' +
+            '<td><strong>' + c.name + '</strong></td>' +
+            '<td>' + (c.phone || '-') + '</td>' +
+            '<td><span class="badge ' + intentClass + '">' + intentValue + '</span></td>' +
+            '<td><span class="badge ' + statusClass + '">' + statusLabel + '</span></td>' +
+            '<td>' + (owner ? owner.name : '-') + '</td>' +
+            '<td><button class="btn btn-sm btn-success" onclick="convertToDeal(' + c.id + ')">💰 成交</button> ' + editBtn + '</td>' +
+            '</tr>';
+    }).join('');
+}
+
+function convertToDeal(id) {
+    var c = appData.customers.find(function(x) { return x.id === id; });
+    if (c) {
+        window.pendingDealCustomerId = id;
+        // 重置表单
+        document.getElementById('deal-payment-method').value = c.paymentType || '';
+        toggleDepositFields();
+        
+        // 根据付款方式填充数据
+        if (c.paymentType === 'deposit_balance') {
+            document.getElementById('deal-deposit-amount').value = c.depositAmount || '';
+            document.getElementById('deal-balance-amount').value = c.balanceAmount || '';
+            updateTotalAmount();
+        } else {
+            document.getElementById('deal-amount').value = c.amount || '';
+        }
+        
+        closeModal('add-service-customer-modal');
+        openModal('deal-modal');
+    }
+}
+
+// 表单提交绑定
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('add-service-customer-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveServiceCustomer();
+    });
+});
+
+// ========== 服务进度 ==========
+// 付款方式映射
+var paymentMethodMap = {
+    'deposit_balance': '💰 定金+尾款',
+    'full_wechat': '💰 全款微信',
+    'full_alipay': '💰 全款支付宝',
+    'full_bank': '🏦 全款银行转账',
+    'full_cash': '💵 全款现金'
+};
+
+function renderServices() {
+    var tbody = document.getElementById('services-tbody');
+    var stageFilter = document.getElementById('service-stage-filter').value;
+    var services = appData.customers.filter(function(c) { return c.status === 'deal'; });
+    if (stageFilter) services = services.filter(function(s) { return s.serviceProgress == stageFilter; });
+    
+    // 更新统计数字
+    var totalPaidCustomers = appData.customers.filter(function(c) { return c.status === 'deal'; }).length;
+    document.getElementById('paid-customer-count').textContent = totalPaidCustomers;
+    
+    if (services.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-state">暂无付费客户</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = services.map(function(s) {
+        var progress = ((s.serviceProgress || 1) / 8) * 100;
+        var stageDots = '';
+        for (var i = 1; i <= 8; i++) {
+            var completed = s.serviceProgress >= i;
+            var color = completed ? '#F56C6C' : (s.serviceProgress === i ? '#67C23A' : '#dcdfe6');
+            stageDots += '<span class="stage-dot" style="background:' + color + ';"></span>';
+        }
+        var amountDisplay = s.amount ? '¥' + Number(s.amount).toLocaleString() : '-';
+        var paymentDisplay = s.paymentType ? paymentMethodMap[s.paymentType] || s.paymentType : '-';
+        
+        // 付款状态显示
+        var paymentStatus = '';
+        if (s.paymentType === 'deposit_balance') {
+            if (s.balancePaid) {
+                paymentStatus = '<span class="badge badge-success">✅ 已付清</span>';
+            } else {
+                paymentStatus = '<span class="badge badge-warning">⏳ 待补尾款</span>';
+            }
+        } else {
+            paymentStatus = '<span class="badge badge-success">✅ 已付清</span>';
+        }
+        
+        // 已付金额显示
+        var paidAmountDisplay = '';
+        if (s.paymentType === 'deposit_balance' && !s.balancePaid) {
+            paidAmountDisplay = '<br><small style="color: var(--primary);">已付: ¥' + Number(s.paidAmount || s.depositAmount || 0).toLocaleString() + '</small>';
+        }
+        
+        var dealDateDisplay = s.dealDate || '-';
+        var owner = appData.team.find(function(t) { return t.id == s.owner; });
+        
+        // 补缴尾款按钮（定金+尾款模式且未付清时显示）
+        var balanceBtn = '';
+        if (s.paymentType === 'deposit_balance' && !s.balancePaid) {
+            balanceBtn = '<button class="btn btn-sm btn-success" onclick="openBalancePaymentModal(' + s.id + ')" style="margin-left: 5px;">补缴尾款</button>';
+        }
+        
+        // 权限控制：编辑和删除按钮
+        var canEdit = isAdmin() || (currentUser && (currentUser.username === s.createdBy || s.owner == getCurrentTeamMemberId()));
+        var editBtn = canEdit ? '<button class="btn btn-sm btn-warning" onclick="openServiceEdit(' + s.id + ')">编辑</button>' : '<button class="btn btn-sm btn-warning" disabled title="无权编辑">编辑</button>';
+        var deleteBtn = isAdmin() ? '<button class="btn btn-sm btn-danger" onclick="deleteServiceCustomer(' + s.id + ')">删除</button>' : '<button class="btn btn-sm btn-danger" disabled title="仅管理员可删除">删除</button>';
+        
+        return '<tr>' +
+            '<td><strong>' + s.name + '</strong> <span class="status-tag status-success-deal">🔴</span></td>' +
+            '<td>' + (s.phone || '-') + '</td>' +
+            '<td><strong style="color:var(--success);">' + amountDisplay + '</strong>' + paidAmountDisplay + '</td>' +
+            '<td>' + (paymentDisplay || '-') + '<br>' + paymentStatus + '</td>' +
+            '<td>' + dealDateDisplay + '</td>' +
+            '<td>' + (owner ? owner.name : '-') + '</td>' +
+            '<td><div class="stage-indicator">' + stageDots + '</div><small>阶段' + (s.serviceProgress || 1) + '</small></td>' +
+            '<td><button class="btn btn-sm btn-primary" onclick="openServiceDetail(' + s.id + ')">详情</button> ' + editBtn + balanceBtn + ' ' + deleteBtn + '</td>' +
+            '</tr>';
+    }).join('');
+}
+
+function openServiceDetail(id) {
+    var s = appData.customers.find(function(c) { return c.id === id && c.status === 'deal'; });
+    if (!s) return;
+    var html = '<div style="margin-bottom:20px;"><h4>' + s.name + ' - 服务进度</h4></div>';
+    html += '<div class="steps">';
+    appData.serviceStages.forEach(function(stage, idx) {
+        var completed = s.serviceProgress >= stage.id;
+        var active = s.serviceProgress === stage.id;
+        html += '<div class="step ' + (completed ? 'completed' : '') + ' ' + (active ? 'active' : '') + '"><div class="step-num">' + stage.id + '</div><div class="step-label">' + stage.name + '</div></div>';
+    });
+    html += '</div>';
+    html += '<div style="margin-top:20px;"><label>更新阶段：</label><select class="form-control" onchange="updateServiceStage(' + s.id + ', this.value)">';
+    appData.serviceStages.forEach(function(stage) {
+        html += '<option value="' + stage.id + '" ' + (s.serviceProgress === stage.id ? 'selected' : '') + '>阶段' + stage.id + '：' + stage.name + '</option>';
+    });
+    html += '</select></div>';
+    html += '<div style="margin-top:15px;"><label>满意度：</label><div class="stars">';
+    for (var i = 1; i <= 5; i++) {
+        html += '<span style="cursor:pointer;font-size:24px;" onclick="updateSatisfaction(' + s.id + ',' + i + ')">' + (i <= (s.satisfaction || 0) ? '★' : '☆') + '</span>';
+    }
+    html += '</div></div>';
+    document.getElementById('service-detail').innerHTML = html;
+    openModal('service-modal');
+}
+
+function deleteServiceCustomer(id) {
+    // 权限检查：只有管理员可以删除
+    if (!isAdmin()) {
+        alert('只有管理员可以删除付费客户记录');
+        return;
+    }
+    
+    if (!confirm('确定要删除该客户吗？删除后不可恢复。')) return;
+    
+    var index = appData.customers.findIndex(function(c) { return c.id === id && c.status === 'deal'; });
+    if (index !== -1) {
+        appData.customers.splice(index, 1);
+        saveData();
+        renderServices();
+    }
+}
+
+function updateServiceStage(id, stage) {
+    var s = appData.customers.find(function(c) { return c.id === id; });
+    if (s) { s.serviceProgress = parseInt(stage); saveData(); renderServices(); openServiceDetail(id); }
+}
+
+function updateSatisfaction(id, stars) {
+    var s = appData.customers.find(function(c) { return c.id === id; });
+    if (s) { s.satisfaction = stars; saveData(); renderServices(); openServiceDetail(id); }
+}
+
+function openServiceEdit(id) {
+    var s = appData.customers.find(function(c) { return c.id === id && c.status === 'deal'; });
+    if (!s) return;
+    
+    // 权限检查
+    var canEdit = isAdmin() || (currentUser && (currentUser.username === s.createdBy || s.owner == getCurrentTeamMemberId()));
+    if (!canEdit) {
+        alert('您没有权限编辑此客户的服务进度');
+        return;
+    }
+    
+    document.getElementById('edit-service-id').value = s.id;
+    document.getElementById('edit-service-name').value = s.name;
+    document.getElementById('edit-service-stage').value = s.serviceProgress || 1;
+    document.getElementById('edit-service-completed-date').value = s.completedDate || '';
+    document.getElementById('edit-service-satisfaction').value = s.satisfaction || 5;
+    document.getElementById('edit-service-notes').value = s.notes || '';
+    document.getElementById('edit-service-next-date').value = s.nextDate || '';
+    openModal('service-edit-modal');
+}
+
+function saveServiceEdit() {
+    var id = document.getElementById('edit-service-id').value;
+    var s = appData.customers.find(function(c) { return c.id == id; });
+    if (s) {
+        s.serviceProgress = parseInt(document.getElementById('edit-service-stage').value);
+        s.completedDate = document.getElementById('edit-service-completed-date').value;
+        s.satisfaction = parseInt(document.getElementById('edit-service-satisfaction').value);
+        s.notes = document.getElementById('edit-service-notes').value;
+        s.nextDate = document.getElementById('edit-service-next-date').value;
+        saveData();
+        renderServices();
+        closeModal('service-edit-modal');
+    }
+}
+
+// ========== 绩效看板 ==========
+function renderPerformance() {
+    var sales = appData.team.filter(function(t) { return t.role === 'sales'; });
+    var tbody = document.getElementById('performance-tbody');
+    
+    // 如果还没有performance数据，初始化
+    if (!appData.performance) {
+        appData.performance = {};
+    }
+    
+    var totalDeals = 0, totalWechat = 0, totalVisit = 0;
+    sales.forEach(function(s) {
+        var sCustomers = appData.customers.filter(function(c) { return c.owner == s.id; });
+        var deals = sCustomers.filter(function(c) { return c.status === 'deal'; }).length;
+        totalDeals += deals;
+    });
+    
+    // 从performance数据获取本月统计数据
+    var monthStats = getMonthStatsFromPerformance();
+    document.getElementById('perf-total-calls').textContent = monthStats.calls;
+    document.getElementById('perf-total-wechat').textContent = monthStats.wechat;
+    document.getElementById('perf-total-visit').textContent = monthStats.arrived;
+    document.getElementById('perf-total-deals').textContent = monthStats.deals;
+    
+    tbody.innerHTML = sales.map(function(s, idx) {
+        var sCustomers = appData.customers.filter(function(c) { return c.owner == s.id; });
+        var deals = sCustomers.filter(function(c) { return c.status === 'deal'; }).length;
+        var perfData = appData.performance[s.id] || {};
+        var calls = perfData.monthCalls || (150 + Math.floor(Math.random() * 50));
+        var wechat = perfData.monthWechat || (15 + Math.floor(Math.random() * 10));
+        var arrived = perfData.monthArrived || (5 + Math.floor(Math.random() * 5));
+        return '<tr><td>' + (idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1) + '</td><td><strong>' + s.name + '</strong></td><td>' + calls + '</td><td>' + wechat + '</td><td>' + arrived + '</td><td><strong style="color:var(--success);">' + deals + '</strong></td><td>' + (arrived > 0 ? (deals / arrived * 100).toFixed(1) : '0.0') + '%</td></tr>';
+    }).join('');
+}
+
+// 获取本月统计数据（从performance数据）
+function getMonthStatsFromPerformance() {
+    var sales = appData.team.filter(function(t) { return t.role === 'sales'; });
+    var totalCalls = 0, totalWechat = 0, totalArrived = 0, totalDeals = 0;
+    
+    sales.forEach(function(s) {
+        var perfData = appData.performance[s.id] || {};
+        totalCalls += (perfData.monthCalls || 0);
+        totalWechat += (perfData.monthWechat || 0);
+        totalArrived += (perfData.monthArrived || 0);
+        
+        var sCustomers = appData.customers.filter(function(c) { return c.owner == s.id && c.status === 'deal'; });
+        totalDeals += sCustomers.length;
+    });
+    
+    // 如果都没有数据，返回默认统计
+    if (totalCalls === 0 && totalWechat === 0 && totalArrived === 0 && totalDeals === 0) {
+        return { calls: 624, wechat: 72, arrived: 28, deals: 0 };
+    }
+    
+    return { calls: totalCalls, wechat: totalWechat, arrived: totalArrived, deals: totalDeals };
+}
+
+// 填充绩效看板人员选择下拉框
+function populatePerformanceSalesSelect() {
+    var select = document.getElementById('perf-sales-select');
+    var editSelect = document.getElementById('perf-edit-sales-select');
+    if (!select || !editSelect) return;
+    
+    var sales = appData.team.filter(function(t) { return t.role === 'sales'; });
+    var options = '<option value="">全部电销人员</option>' + sales.map(function(s) { return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('');
+    select.innerHTML = options;
+    
+    var editOptions = '<option value="">-- 请选择 --</option>' + sales.map(function(s) { return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('');
+    editSelect.innerHTML = editOptions;
+    
+    // 管理员显示修改按钮
+    var editBtn = document.getElementById('perf-edit-btn');
+    if (editBtn) {
+        if (isAdmin()) {
+            editBtn.style.display = 'inline-block';
+        } else {
+            editBtn.style.display = 'none';
+        }
+    }
+    
+    // 添加选择变化事件监听
+    select.onchange = function() {
+        // 可以根据选择筛选显示内容
+        renderPerformanceBySales(select.value);
+    };
+}
+
+// 根据选择的人员渲染绩效排行
+function renderPerformanceBySales(salesId) {
+    var sales = appData.team.filter(function(t) { return t.role === 'sales'; });
+    var tbody = document.getElementById('performance-tbody');
+    
+    if (!salesId) {
+        // 显示全部
+        renderPerformance();
+        return;
+    }
+    
+    // 筛选指定人员
+    var targetSales = sales.filter(function(s) { return s.id == salesId; });
+    if (targetSales.length === 0) return;
+    
+    var s = targetSales[0];
+    var sCustomers = appData.customers.filter(function(c) { return c.owner == s.id; });
+    var deals = sCustomers.filter(function(c) { return c.status === 'deal'; }).length;
+    var perfData = appData.performance[s.id] || {};
+    var calls = perfData.monthCalls || (150 + Math.floor(Math.random() * 50));
+    var wechat = perfData.monthWechat || (15 + Math.floor(Math.random() * 10));
+    var arrived = perfData.monthArrived || (5 + Math.floor(Math.random() * 5));
+    
+    tbody.innerHTML = '<tr><td>🥇</td><td><strong>' + s.name + '</strong></td><td>' + calls + '</td><td>' + wechat + '</td><td>' + arrived + '</td><td><strong style="color:var(--success);">' + deals + '</strong></td><td>' + (arrived > 0 ? (deals / arrived * 100).toFixed(1) : '0.0') + '%</td></tr>';
+}
+
+// 打开编辑业绩弹窗
+function openPerformanceEditModal() {
+    if (!isAdmin()) {
+        alert('只有管理员可以修改业绩数据');
+        return;
+    }
+    
+    // 清空表单
+    document.getElementById('performance-edit-form').reset();
+    document.getElementById('perf-edit-sales-select').value = '';
+    
+    // 打开弹窗
+    openModal('performance-edit-modal');
+}
+
+// 加载业绩数据到表单
+function loadPerformanceData() {
+    var salesId = document.getElementById('perf-edit-sales-select').value;
+    
+    if (!salesId) {
+        // 清空所有表单
+        clearPerformanceForm();
+        return;
+    }
+    
+    var perfData = appData.performance[salesId] || {};
+    
+    // 今日数据
+    document.getElementById('perf-today-calls').value = perfData.todayCalls || 0;
+    document.getElementById('perf-today-connected').value = perfData.todayConnected || 0;
+    document.getElementById('perf-today-wechat').value = perfData.todayWechat || 0;
+    document.getElementById('perf-today-appointments').value = perfData.todayAppointments || 0;
+    document.getElementById('perf-today-arrived').value = perfData.todayArrived || 0;
+    document.getElementById('perf-today-deals').value = perfData.todayDeals || 0;
+    
+    // 本周数据
+    document.getElementById('perf-week-calls').value = perfData.weekCalls || 0;
+    document.getElementById('perf-week-connected').value = perfData.weekConnected || 0;
+    document.getElementById('perf-week-wechat').value = perfData.weekWechat || 0;
+    document.getElementById('perf-week-appointments').value = perfData.weekAppointments || 0;
+    document.getElementById('perf-week-arrived').value = perfData.weekArrived || 0;
+    document.getElementById('perf-week-deals').value = perfData.weekDeals || 0;
+    
+    // 本月数据
+    document.getElementById('perf-month-calls').value = perfData.monthCalls || 0;
+    document.getElementById('perf-month-connected').value = perfData.monthConnected || 0;
+    document.getElementById('perf-month-wechat').value = perfData.monthWechat || 0;
+    document.getElementById('perf-month-appointments').value = perfData.monthAppointments || 0;
+    document.getElementById('perf-month-arrived').value = perfData.monthArrived || 0;
+    document.getElementById('perf-month-deals').value = perfData.monthDeals || 0;
+    
+    // 成交金额
+    document.getElementById('perf-deal-amount').value = perfData.dealAmount || 0;
+}
+
+// 清空业绩表单
+function clearPerformanceForm() {
+    var fields = ['perf-today-calls', 'perf-today-connected', 'perf-today-wechat', 
+                  'perf-today-appointments', 'perf-today-arrived', 'perf-today-deals',
+                  'perf-week-calls', 'perf-week-connected', 'perf-week-wechat',
+                  'perf-week-appointments', 'perf-week-arrived', 'perf-week-deals',
+                  'perf-month-calls', 'perf-month-connected', 'perf-month-wechat',
+                  'perf-month-appointments', 'perf-month-arrived', 'perf-month-deals',
+                  'perf-deal-amount'];
+    
+    fields.forEach(function(field) {
+        var el = document.getElementById(field);
+        if (el) el.value = 0;
+    });
+}
+
+// 保存业绩数据
+function savePerformanceData() {
+    if (!isAdmin()) {
+        alert('只有管理员可以修改业绩数据');
+        return;
+    }
+    
+    var salesId = document.getElementById('perf-edit-sales-select').value;
+    if (!salesId) {
+        alert('请选择电销人员');
+        return;
+    }
+    
+    // 获取表单数据
+    var perfData = {
+        // 今日数据
+        todayCalls: parseInt(document.getElementById('perf-today-calls').value) || 0,
+        todayConnected: parseInt(document.getElementById('perf-today-connected').value) || 0,
+        todayWechat: parseInt(document.getElementById('perf-today-wechat').value) || 0,
+        todayAppointments: parseInt(document.getElementById('perf-today-appointments').value) || 0,
+        todayArrived: parseInt(document.getElementById('perf-today-arrived').value) || 0,
+        todayDeals: parseInt(document.getElementById('perf-today-deals').value) || 0,
+        
+        // 本周数据
+        weekCalls: parseInt(document.getElementById('perf-week-calls').value) || 0,
+        weekConnected: parseInt(document.getElementById('perf-week-connected').value) || 0,
+        weekWechat: parseInt(document.getElementById('perf-week-wechat').value) || 0,
+        weekAppointments: parseInt(document.getElementById('perf-week-appointments').value) || 0,
+        weekArrived: parseInt(document.getElementById('perf-week-arrived').value) || 0,
+        weekDeals: parseInt(document.getElementById('perf-week-deals').value) || 0,
+        
+        // 本月数据
+        monthCalls: parseInt(document.getElementById('perf-month-calls').value) || 0,
+        monthConnected: parseInt(document.getElementById('perf-month-connected').value) || 0,
+        monthWechat: parseInt(document.getElementById('perf-month-wechat').value) || 0,
+        monthAppointments: parseInt(document.getElementById('perf-month-appointments').value) || 0,
+        monthArrived: parseInt(document.getElementById('perf-month-arrived').value) || 0,
+        monthDeals: parseInt(document.getElementById('perf-month-deals').value) || 0,
+        
+        // 成交金额
+        dealAmount: parseFloat(document.getElementById('perf-deal-amount').value) || 0,
+        
+        // 更新时间
+        updatedAt: new Date().toISOString(),
+        updatedBy: currentUser ? currentUser.username : 'admin'
+    };
+    
+    // 保存到appData
+    appData.performance[salesId] = perfData;
+    
+    // 保存到本地存储
+    saveData();
+    
+    // 关闭弹窗
+    closeModal('performance-edit-modal');
+    
+    // 刷新绩效看板显示
+    renderPerformance();
+    
+    alert('业绩数据保存成功！');
+}
+
+// ========== 朋友圈生成 ==========
+function generateMoments() {
+    var type = document.getElementById('moments-type').value;
+    var templates = [
+        '🌅 早安，各位家长！\n\n"高考不是人生的终点，而是新起点✨\n选择对了，每所大学都能成就精彩人生！"\n\n💪 加油，每一位努力的学子！\n\n康迪格优升学 | 用AI为梦想导航',
+        '🏫 【干货分享】报志愿选学校，这个坑千万别踩！\n\n真相是：专业排名>学校排名！\n\n🎯 正确姿势：\n1️⃣ 先定专业方向\n2️⃣ 再选该专业强的院校\n3️⃣ 最后看城市因素',
+        '🎉 【真实案例分享】\n\n📍 学员：张同学\n📊 高考成绩：理科 568分\n🎯 录取结果：云南大学 计算机专业\n\n✨ 精准定位，压线进入理想专业！'
+    ];
+    
+    var container = document.getElementById('generated-moments');
+    container.innerHTML = templates.map(function(t, i) {
+        return '<div class="card" style="border-left:3px solid var(--primary);"><div class="card-header"><span class="card-title">📱 朋友圈文案 ' + (i+1) + '</span><button class="btn btn-sm btn-outline" onclick="copyToClipboard(this, \'' + t.replace(/'/g, "\\'").replace(/\n/g, '\\n') + '\')">复制</button></div><div class="generated-content">' + t.replace(/\n/g, '<br>') + '</div></div>';
+    }).join('');
+}
+
+function copyMoments() {
+    var contents = document.querySelectorAll('#generated-moments .generated-content');
+    if (contents.length === 0) { alert('请先生成文案'); return; }
+    var text = Array.from(contents).map(function(c, i) { return '【文案' + (i+1) + '】\n' + c.textContent; }).join('\n\n==========\n\n');
+    navigator.clipboard.writeText(text);
+    alert('已复制全部文案！');
+}
+
+function useTemplate(btn) {
+    var content = btn.previousElementSibling.textContent;
+    navigator.clipboard.writeText(content).then(function() { alert('已复制！'); });
+}
+
+function copyScript(btn) {
+    var content = btn.previousElementSibling.textContent;
+    navigator.clipboard.writeText(content).then(function() {
+        btn.textContent = '已复制!';
+        setTimeout(function() { btn.textContent = '复制话术'; }, 1500);
+    });
+}
+
+function copyToClipboard(btn, text) {
+    navigator.clipboard.writeText(text).then(function() {
+        if (btn) {
+            btn.textContent = '已复制!';
+            setTimeout(function() { btn.textContent = '复制'; }, 1500);
+        }
+    });
+}
+
+// ========== 成功案例 ==========
+function renderCases() {
+    var container = document.getElementById('cases-list');
+    container.innerHTML = appData.cases.map(function(c) {
+        return '<div class="card"><div style="display:flex; justify-content:space-between; margin-bottom:15px;"><div><h3 style="color:var(--primary);">' + c.studentName + '</h3><p style="color:var(--text-light);">' + c.year + '年 | ' + (c.type === 'science' ? '理科' : '文科') + '</p></div><div style="text-align:right;"><div style="font-size:24px; color:var(--success); font-weight:bold;">' + c.score + '分</div></div></div><div style="background:var(--bg); padding:15px; border-radius:8px; margin-bottom:15px;"><p><strong>录取院校：</strong>' + c.school + '</p><p><strong>录取专业：</strong>' + c.major + '</p></div><p style="margin-bottom:15px;">' + c.story + '</p>' + c.tags.map(function(t) { return '<span class="badge badge-primary" style="margin-right:5px;">' + t + '</span>'; }).join('') + '</div>';
+    }).join('');
+}
+
+// ========== 团队管理 ==========
+function renderTeam() {
+    // 安全检查
+    if (!appData.team || !Array.isArray(appData.team) || appData.team.length === 0) {
+        appData.team = [
+            { id: 1, name: '念老师', role: 'sales', phone: '13800138001' },
+            { id: 2, name: '周老师', role: 'sales', phone: '13800138002' },
+            { id: 3, name: '肖老师', role: 'sales', phone: '13800138003' },
+            { id: 4, name: '郭老师', role: 'sales', phone: '13800138004' },
+            { id: 5, name: '陈规划', role: 'planner', phone: '13800138005' }
+        ];
+    }
+    
+    var tbody = document.getElementById('team-tbody');
+    if (!tbody) return;
+    
+    var roleMap = { sales: '电销人员', planner: '规划师', admin: '管理员' };
+    // 权限控制：只有管理员可以操作
+    var canManage = isAdmin();
+    var addBtnHtml = canManage ? '<button class="btn btn-primary" onclick="openAddTeamModal()">➕ 添加成员</button>' : '<button class="btn btn-primary" disabled title="仅管理员可操作">➕ 添加成员</button>';
+    
+    // 更新添加按钮的显示
+    var addBtn = document.querySelector('#page-settings .card:first-child .card-header button');
+    if (addBtn) {
+        addBtn.disabled = !canManage;
+        addBtn.title = canManage ? '➕ 添加成员' : '仅管理员可操作';
+    }
+    
+    tbody.innerHTML = appData.team.map(function(t) {
+        // 权限控制：编辑和删除按钮
+        var editBtn = canManage ? '<button class="btn btn-sm btn-outline" onclick="openEditTeamModal(' + t.id + ')">编辑</button>' : '<button class="btn btn-sm btn-outline" disabled title="仅管理员可操作">编辑</button>';
+        var deleteBtn = canManage ? '<button class="btn btn-sm btn-danger" onclick="deleteTeamMember(' + t.id + ')">删除</button>' : '<button class="btn btn-sm btn-danger" disabled title="仅管理员可操作">删除</button>';
+        return '<tr><td>' + t.name + '</td><td>' + (roleMap[t.role] || t.role) + '</td><td>' + (t.phone || '-') + '</td><td><span class="badge badge-success">在职</span></td><td>' + editBtn + ' ' + deleteBtn + '</td></tr>';
+    }).join('');
+}
+
+function populateTeamSelect(selectId) {
+    var select = document.getElementById(selectId);
+    if (!select) return;
+    select.innerHTML = appData.team.filter(function(t) { return t.role !== 'admin'; }).map(function(t) { return '<option value="' + t.id + '">' + t.name + '</option>'; }).join('');
+}
+
+// ========== 团队成员增删改查 ==========
+function openAddTeamModal() {
+    // 权限检查
+    if (!isAdmin()) {
+        alert('只有管理员可以添加团队成员');
+        return;
+    }
+    document.getElementById('team-form').reset();
+    document.getElementById('team-id').value = '';
+    document.getElementById('team-modal-title').textContent = '添加成员';
+    openModal('team-modal');
+}
+
+function openEditTeamModal(id) {
+    // 权限检查
+    if (!isAdmin()) {
+        alert('只有管理员可以编辑团队成员');
+        return;
+    }
+    var member = appData.team.find(function(t) { return t.id === id; });
+    if (!member) return;
+    
+    document.getElementById('team-id').value = member.id;
+    document.getElementById('team-name').value = member.name;
+    document.getElementById('team-role').value = member.role;
+    document.getElementById('team-phone').value = member.phone || '';
+    document.getElementById('team-modal-title').textContent = '编辑成员';
+    openModal('team-modal');
+}
+
+function saveTeamMember() {
+    var id = document.getElementById('team-id').value;
+    var name = document.getElementById('team-name').value.trim();
+    var role = document.getElementById('team-role').value;
+    var phone = document.getElementById('team-phone').value.trim();
+    
+    if (!name || !role) {
+        alert('请填写完整信息');
+        return;
+    }
+    
+    if (id) {
+        // 编辑
+        var index = appData.team.findIndex(function(t) { return t.id === parseInt(id); });
+        if (index !== -1) {
+            appData.team[index].name = name;
+            appData.team[index].role = role;
+            appData.team[index].phone = phone;
+        }
+    } else {
+        // 添加
+        var maxId = appData.team.reduce(function(max, t) { return t.id > max ? t.id : max; }, 0);
+        appData.team.push({
+            id: maxId + 1,
+            name: name,
+            role: role,
+            phone: phone
+        });
+    }
+    
+    saveData();
+    renderTeam();
+    closeModal('team-modal');
+}
+
+function deleteTeamMember(id) {
+    // 权限检查
+    if (!isAdmin()) {
+        alert('只有管理员可以删除团队成员');
+        return;
+    }
+    
+    if (!confirm('确定要删除该成员吗？')) return;
+    
+    var index = appData.team.findIndex(function(t) { return t.id === id; });
+    if (index !== -1) {
+        appData.team.splice(index, 1);
+        saveData();
+        renderTeam();
+    }
+}
+
+function populateDashboardSalesSelect() {
+    var select = document.getElementById('dashboard-sales-select');
+    if (!select) return;
+    
+    // 安全检查
+    if (!appData.team || !Array.isArray(appData.team) || appData.team.length === 0) {
+        appData.team = [
+            { id: 1, name: '念老师', role: 'sales', phone: '13800138001' },
+            { id: 2, name: '周老师', role: 'sales', phone: '13800138002' },
+            { id: 3, name: '肖老师', role: 'sales', phone: '13800138003' },
+            { id: 4, name: '郭老师', role: 'sales', phone: '13800138004' },
+            { id: 5, name: '陈规划', role: 'planner', phone: '13800138005' }
+        ];
+    }
+    
+    var sales = appData.team.filter(function(t) { return t.role === 'sales'; });
+    var options = '<option value="all">全部电销人员</option>' + sales.map(function(s) { return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('');
+    select.innerHTML = options;
+}
+
+// ========== 预约时间表 ==========
+var currentWeekOffset = 0;
+
+// 初始化预约演示数据（如果没有预约数据则自动创建）
+function initAppointmentData() {
+    // 检查是否已有预约数据
+    if (appData.appointments && appData.appointments.length > 0) {
+        return; // 已有数据，不需要初始化
+    }
+    
+    // 获取本周的日期
+    var today = new Date();
+    var dayOfWeek = today.getDay();
+    var monday = new Date(today);
+    monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    
+    // 生成未来一周的日期
+    var dates = [];
+    for (var i = 0; i < 7; i++) {
+        var date = new Date(monday);
+        date.setDate(monday.getDate() + i);
+        dates.push(date);
+    }
+    
+    // 预约示例数据
+    var sampleAppointments = [
+        { customerName: '张妈妈', customerPhone: '13812340001', salesmanId: 1, date: formatDate(dates[0]), time: '09:00', planner: '王老师', campus: '西山校区', status: 'pending', createdBy: 'admin' },
+        { customerName: '李爸爸', customerPhone: '13912340002', salesmanId: 2, date: formatDate(dates[0]), time: '10:00', planner: '李老师', campus: '北市区校区', status: 'arrived', createdBy: 'admin' },
+        { customerName: '王同学', customerPhone: '13712340003', salesmanId: 1, date: formatDate(dates[1]), time: '14:00', planner: '王老师', campus: '西山校区', status: 'success', createdBy: 'admin' },
+        { customerName: '赵家长', customerPhone: '13612340004', salesmanId: 3, date: formatDate(dates[1]), time: '15:00', planner: '张老师', campus: '北市区校区', status: 'pending', createdBy: 'admin' },
+        { customerName: '陈妈妈', customerPhone: '13512340005', salesmanId: 4, date: formatDate(dates[2]), time: '09:00', planner: '李老师', campus: '西山校区', status: 'failed', createdBy: 'admin' },
+        { customerName: '刘爸爸', customerPhone: '13412340006', salesmanId: 2, date: formatDate(dates[3]), time: '14:00', planner: '王老师', campus: '北市区校区', status: 'pending', createdBy: 'admin' },
+        { customerName: '周同学', customerPhone: '13312340007', salesmanId: 1, date: formatDate(dates[4]), time: '10:00', planner: '张老师', campus: '西山校区', status: 'arrived', createdBy: 'admin' },
+        { customerName: '吴妈妈', customerPhone: '13212340008', salesmanId: 3, date: formatDate(dates[5]), time: '19:00', planner: '李老师', campus: '北市区校区', status: 'pending', createdBy: 'admin' },
+        { customerName: '郑家长', customerPhone: '13112340009', salesmanId: 4, date: formatDate(dates[6]), time: '14:00', planner: '王老师', campus: '西山校区', status: 'pending', createdBy: 'admin' }
+    ];
+    
+    // 添加ID和时间戳
+    sampleAppointments.forEach(function(appt) {
+        appt.id = 'appt-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        appt.createdAt = new Date().toISOString();
+        appData.appointments.push(appt);
+    });
+    
+    // 保存到localStorage
+    saveData();
+}
+
+function getWeekDates(offset) {
+    offset = offset || 0;
+    var now = new Date();
+    var dayOfWeek = now.getDay();
+    var monday = new Date(now);
+    monday.setDate(now.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1) + offset * 7);
+    var dates = [];
+    for (var i = 0; i < 7; i++) {
+        var date = new Date(monday);
+        date.setDate(monday.getDate() + i);
+        dates.push(date);
+    }
+    return dates;
+}
+
+function formatDate(date) { return date.toISOString().split('T')[0]; }
+
+function changeWeek(dir) { currentWeekOffset += dir; renderSchedule(); }
+function goToToday() { currentWeekOffset = 0; renderSchedule(); }
+
+function renderSchedule() {
+    var dates = getWeekDates(currentWeekOffset);
+    var container = document.getElementById('schedule-container');
+    var timeSlots = ['09:00', '10:00', '14:00', '15:00', '16:00', '19:00', '20:00'];
+    var dayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+    
+    document.getElementById('current-week-label').textContent = dates[0].toLocaleDateString('zh-CN', {month:'numeric',day:'numeric'}) + ' - ' + dates[6].toLocaleDateString('zh-CN', {month:'numeric',day:'numeric'});
+    
+    var html = '<div class="schedule-grid">';
+    html += '<div class="schedule-header">时段</div>';
+    dates.forEach(function(date, i) {
+        var isToday = formatDate(date) === formatDate(new Date());
+        html += '<div class="schedule-header" style="' + (isToday ? 'background:var(--success);' : '') + '">' + dayNames[i] + '<br><small>' + (date.getMonth()+1) + '/' + date.getDate() + '</small></div>';
+    });
+    
+    timeSlots.forEach(function(time) {
+        html += '<div class="schedule-time">' + time + '</div>';
+        dates.forEach(function(date) {
+            var dateStr = formatDate(date);
+            var campusFilter = document.getElementById('schedule-campus-filter') ? document.getElementById('schedule-campus-filter').value : '';
+            var dayAppts = appData.appointments.filter(function(a) { 
+                var matchDateTime = a.date === dateStr && a.time === time;
+                // 校区筛选：只有选择了具体校区时才进行筛选，否则显示所有预约
+                var matchCampus = !campusFilter || (a.campus && a.campus === campusFilter);
+                return matchDateTime && matchCampus;
+            });
+            html += '<div class="schedule-cell" onclick="openAppointmentModal(\'' + dateStr + '\', \'' + time + '\')">';
+            html += dayAppts.map(function(appt) {
+                var statusMap = { pending: { icon: '🟢', label: '未到店', class: 'status-pending-deal' }, arrived: { icon: '🔵', label: '已到店', class: 'status-failed-deal' }, success: { icon: '🔴', label: '成交', class: 'status-success-deal' }, failed: { icon: '🔵', label: '未成交', class: 'status-failed-deal' } };
+                var status = statusMap[appt.status] || statusMap.pending;
+                return '<div class="appointment-card" onclick="event.stopPropagation(); openAppointmentDetail(\'' + appt.id + '\')"><div class="customer">' + appt.customerName + '</div><div class="planner">【' + appt.planner + '】' + (appt.campus ? '<span style="font-size:11px;color:#67C23A;">📍' + appt.campus + '</span>' : '') + '</div><div class="phone">' + appt.customerPhone + '</div><span class="status-tag ' + status.class + '">' + status.icon + ' ' + status.label + '</span></div>';
+            }).join('');
+            html += '</div>';
+        });
+    });
+    html += '</div>';
+    container.innerHTML = html;
+    
+    updateScheduleStats(dates);
+}
+
+function updateScheduleStats(dates) {
+    var startDate = formatDate(dates[0]);
+    var endDate = formatDate(dates[6]);
+    var weekAppts = appData.appointments.filter(function(a) { return a.date >= startDate && a.date <= endDate; });
+    var arrived = weekAppts.filter(function(a) { return ['arrived', 'success', 'failed'].indexOf(a.status) > -1; }).length;
+    var success = weekAppts.filter(function(a) { return a.status === 'success'; }).length;
+    document.getElementById('schedule-total').textContent = weekAppts.length;
+    document.getElementById('schedule-arrived').textContent = arrived;
+    document.getElementById('schedule-success').textContent = success;
+    document.getElementById('schedule-failed').textContent = weekAppts.filter(function(a) { return a.status === 'failed'; }).length;
+    document.getElementById('schedule-pending').textContent = weekAppts.filter(function(a) { return a.status === 'pending'; }).length;
+    document.getElementById('schedule-rate').textContent = arrived > 0 ? Math.round((success / arrived) * 100) + '%' : '0%';
+}
+
+function openAppointmentModal(date, time) {
+    document.getElementById('appointment-form').reset();
+    document.getElementById('appointment-id').value = '';
+    populateSalesmanSelect();
+    if (date) document.getElementById('appointment-date').value = date;
+    else document.getElementById('appointment-date').value = formatDate(new Date());
+    if (time) document.getElementById('appointment-time').value = time;
+    openModal('appointment-modal');
+}
+
+function populateSalesmanSelect() {
+    var select = document.getElementById('appointment-salesman');
+    if (!select) return;
+    
+    // 确保team数据已初始化
+    if (!appData.team || appData.team.length === 0) {
+        appData.team = [
+            { id: 1, name: '念老师', role: 'sales', phone: '13800138001' },
+            { id: 2, name: '周老师', role: 'sales', phone: '13800138002' },
+            { id: 3, name: '肖老师', role: 'sales', phone: '13800138003' },
+            { id: 4, name: '郭老师', role: 'sales', phone: '13800138004' },
+            { id: 5, name: '陈规划', role: 'planner', phone: '13800138005' }
+        ];
+    }
+    
+    var sales = appData.team.filter(function(t) { return t.role === 'sales'; });
+    if (sales.length === 0) {
+        select.innerHTML = '<option value="">暂无电销人员</option>';
+        return;
+    }
+    select.innerHTML = sales.map(function(s) { return '<option value="' + s.id + '">' + s.name + '</option>'; }).join('');
+}
+
+function saveAppointment() {
+    var customerName = document.getElementById('appointment-customer').value.trim();
+    var customerPhone = document.getElementById('appointment-phone').value.trim();
+    var salesmanId = parseInt(document.getElementById('appointment-salesman').value);
+    var date = document.getElementById('appointment-date').value;
+    var time = document.getElementById('appointment-time').value;
+    var planner = document.getElementById('appointment-planner').value;
+    var campus = document.getElementById('appointment-campus').value;
+    
+    // 验证必填字段
+    if (!customerName) {
+        alert('请输入客户姓名');
+        return;
+    }
+    if (!customerPhone) {
+        alert('请输入联系电话');
+        return;
+    }
+    if (!salesmanId || isNaN(salesmanId)) {
+        alert('请选择电销人员');
+        return;
+    }
+    if (!date) {
+        alert('请选择预约日期');
+        return;
+    }
+    if (!planner) {
+        alert('请选择规划师');
+        return;
+    }
+    if (!campus) {
+        alert('请选择校区');
+        return;
+    }
+    
+    // 检查是否已存在该客户，如果存在则关联（同时匹配电话或姓名）
+    var existingCustomer = appData.customers.find(function(c) { 
+        return (c.phone && c.phone === customerPhone) || (c.name && c.name === customerName); 
+    });
+    
+    var appt = {
+        customerName: customerName,
+        customerPhone: customerPhone,
+        salesmanId: salesmanId,
+        date: date,
+        time: time,
+        planner: planner,
+        campus: campus,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        createdBy: currentUser ? currentUser.username : 'admin'
+    };
+    
+    // 如果存在客户，关联客户ID
+    if (existingCustomer) {
+        appt.customerId = existingCustomer.id;
+    }
+    
+    appt.id = 'appt-' + Date.now();
+    appData.appointments.push(appt);
+    
+    // 如果是新客户，自动添加到客户列表
+    if (!existingCustomer) {
+        var newCustomer = {
+            id: Date.now(),
+            name: customerName,
+            phone: customerPhone,
+            owner: appt.salesmanId,
+            status: 'new',
+            intentLevel: '中',
+            intent: 'B',
+            createdAt: new Date().toISOString(),
+            createdBy: currentUser ? currentUser.username : 'admin'
+        };
+        appData.customers.push(newCustomer);
+        appt.customerId = newCustomer.id;
+    } else {
+        // 更新客户状态为已上门
+        if (existingCustomer.status !== 'deal') {
+            existingCustomer.status = 'visit';
+        }
+    }
+    
+    saveData();
+    renderSchedule();
+    renderCustomers();          // 更新客户列表
+    renderPotentialCustomers(); // 更新待跟进客户列表
+    closeModal('appointment-modal');
+}
+
+function openAppointmentDetail(id) {
+    var appt = appData.appointments.find(function(a) { return a.id === id; });
+    if (!appt) return;
+    var statusMap = { pending: { icon: '🟢', label: '未到店', class: 'status-pending-deal' }, arrived: { icon: '🔵', label: '已到店', class: 'status-failed-deal' }, success: { icon: '🔴', label: '成交', class: 'status-success-deal' }, failed: { icon: '🔵', label: '未成交', class: 'status-failed-deal' } };
+    var status = statusMap[appt.status] || statusMap.pending;
+    var salesman = appData.team.find(function(t) { return t.id === appt.salesmanId; });
+    // 权限检查：是否是自己的预约
+    var canDelete = isAdmin() || (currentUser && currentUser.username === appt.createdBy);
+    var deleteBtn = canDelete ? '<button class="btn btn-danger btn-sm" onclick="deleteAppointment(\'' + appt.id + '\')">🗑️ 删除</button>' : '<button class="btn btn-danger btn-sm" disabled title="仅创建者可删除">🗑️ 删除</button>';
+    var html = '<div style="margin-bottom:15px;"><h4 style="color:var(--primary); margin-bottom:10px;">' + appt.customerName + '</h4><span class="status-tag ' + status.class + '">' + status.icon + ' ' + status.label + '</span></div>';
+    html += '<p><strong>📞</strong> ' + appt.customerPhone + '</p>';
+    html += '<p><strong>📅</strong> ' + appt.date + ' ' + appt.time + '</p>';
+    html += '<p><strong>👨‍🏫</strong> ' + appt.planner + '</p>';
+    html += '<p><strong>📍</strong> ' + (appt.campus || '-') + '</p>';
+    html += '<p><strong>📋</strong> ' + (salesman ? salesman.name : '-') + '</p>';
+    html += '<div style="margin-top:20px; padding-top:15px; border-top:1px solid var(--border);"><label style="margin-bottom:10px;"><strong>更新状态：</strong></label>';
+    html += '<div class="btn-group"><button class="btn btn-sm ' + (appt.status === 'pending' ? 'btn-success' : 'btn-outline') + '" onclick="updateAppointmentStatus(\'' + appt.id + '\', \'pending\')">🟢 未到店</button>';
+    html += '<button class="btn btn-sm ' + (appt.status === 'arrived' ? 'btn-primary' : 'btn-outline') + '" onclick="updateAppointmentStatus(\'' + appt.id + '\', \'arrived\')">🔵 已到店</button>';
+    html += '<button class="btn btn-sm ' + (appt.status === 'success' ? 'btn-danger' : 'btn-outline') + '" onclick="openDealFromAppointment(\'' + appt.id + '\')">🔴 成交</button>';
+    html += '<button class="btn btn-sm ' + (appt.status === 'failed' ? 'btn-primary' : 'btn-outline') + '" onclick="updateAppointmentStatus(\'' + appt.id + '\', \'failed\')">🔵 未成交</button></div></div>';
+    html += '<div style="margin-top:15px;">' + deleteBtn + '</div>';
+    document.getElementById('appointment-detail').innerHTML = html;
+    openModal('appointment-detail-modal');
+}
+
+// 从预约直接打开成交弹窗
+function openDealFromAppointment(apptId) {
+    var appt = appData.appointments.find(function(a) { return a.id === apptId; });
+    if (!appt) return;
+    
+    // 如果已有关联客户，直接使用
+    if (appt.customerId) {
+        window.pendingDealCustomerId = appt.customerId;
+        document.getElementById('deal-amount').value = '';
+        document.getElementById('deal-payment-method').value = '';
+        closeModal('appointment-detail-modal');
+        openModal('deal-modal');
+    } else {
+        // 创建新客户并直接标记为成交
+        var newCustomer = {
+            id: Date.now(),
+            name: appt.customerName,
+            phone: appt.customerPhone,
+            owner: appt.salesmanId,
+            status: 'deal',
+            intentLevel: '高',
+            intent: 'A',
+            serviceProgress: 1,
+            satisfaction: 5,
+            createdAt: new Date().toISOString()
+        };
+        appData.customers.push(newCustomer);
+        appt.customerId = newCustomer.id;
+        appt.status = 'success';
+        saveData();
+        renderSchedule();
+        renderCustomers();
+        renderServices();
+        renderPotentialCustomers();
+        closeModal('appointment-detail-modal');
+        alert('客户【' + appt.customerName + '】已标记为成交！\n请到"服务进度"页面编辑填写成交金额和付款方式。');
+    }
+}
+
+function updateAppointmentStatus(id, status) {
+    var appt = appData.appointments.find(function(a) { return a.id === id; });
+    if (appt) { 
+        appt.status = status; 
+        
+        // 如果标记为成交，关联客户也更新为成交状态
+        if (status === 'success' && appt.customerId) {
+            var customer = appData.customers.find(function(c) { return c.id === appt.customerId; });
+            if (customer && customer.status !== 'deal') {
+                customer.status = 'deal';
+                customer.serviceProgress = 1;
+                customer.satisfaction = 5;
+            }
+        }
+        
+        saveData(); 
+        renderSchedule(); 
+        renderCustomers();          // 更新客户列表
+        renderServices();          // 更新付费客户服务进度
+        renderPotentialCustomers(); // 更新待跟进客户列表
+        openAppointmentDetail(id); 
+    }
+}
+
+function deleteAppointment(id) {
+    var appt = appData.appointments.find(function(a) { return a.id === id; });
+    if (!appt) return;
+    
+    // 权限检查：是否是自己的预约
+    if (!isAdmin() && currentUser && currentUser.username !== appt.createdBy) {
+        alert('您没有权限删除此预约');
+        return;
+    }
+    
+    if (confirm('确定要删除这个预约吗？')) {
+        appData.appointments = appData.appointments.filter(function(a) { return a.id !== id; });
+        saveData();
+        renderSchedule();
+        closeModal('appointment-detail-modal');
+    }
+}
+
+// ========== 数据看板 ==========
+var currentDashboardPeriod = 'week';
+
+function setDashboardPeriod(period) {
+    currentDashboardPeriod = period;
+    document.querySelectorAll('[data-period]').forEach(function(tab) {
+        tab.classList.remove('active');
+        if (tab.dataset.period === period) tab.classList.add('active');
+    });
+    updateDashboard();
+}
+
+function updateDashboard() {
+    var salesId = document.getElementById('dashboard-sales-select').value;
+    document.getElementById('dashboard-period-label').textContent = (currentDashboardPeriod === 'today' ? '本日' : currentDashboardPeriod === 'week' ? '本周' : '本月') + '数据';
+    
+    var calls = salesId === 'all' ? 624 : 156;
+    var wechat = salesId === 'all' ? 72 : 18;
+    var visit = salesId === 'all' ? 28 : 7;
+    var arrived = salesId === 'all' ? 25 : 6;
+    var deals = appData.customers.filter(function(c) { return c.status === 'deal' && (salesId === 'all' || c.owner == salesId); }).length;
+    var revenue = appData.customers.filter(function(c) { return c.status === 'deal' && (salesId === 'all' || c.owner == salesId); }).reduce(function(sum, c) { return sum + (c.amount ? parseFloat(c.amount) : 0); }, 0);
+    
+    document.getElementById('stat-calls').textContent = calls;
+    document.getElementById('stat-wechat').textContent = wechat;
+    document.getElementById('stat-visit').textContent = visit;
+    document.getElementById('stat-arrived').textContent = arrived;
+    document.getElementById('stat-deal').textContent = deals;
+    document.getElementById('stat-deal-rate').textContent = arrived > 0 ? Math.round((deals / arrived) * 100) + '%' : '0%';
+    document.getElementById('stat-conversion').textContent = calls > 0 ? (deals / calls * 100).toFixed(1) + '%' : '0%';
+    document.getElementById('stat-revenue').textContent = '¥' + revenue.toLocaleString();
+    
+    var funnel1 = calls > 0 ? wechat / calls * 100 : 0;
+    var funnel2 = wechat > 0 ? visit / wechat * 100 : 0;
+    var funnel3 = visit > 0 ? arrived / visit * 100 : 0;
+    var funnel4 = arrived > 0 ? deals / arrived * 100 : 0;
+    
+    document.getElementById('funnel1').textContent = funnel1.toFixed(1) + '%';
+    document.getElementById('funnel1-bar').style.width = funnel1 + '%';
+    document.getElementById('funnel2').textContent = funnel2.toFixed(1) + '%';
+    document.getElementById('funnel2-bar').style.width = funnel2 + '%';
+    document.getElementById('funnel3').textContent = funnel3.toFixed(1) + '%';
+    document.getElementById('funnel3-bar').style.width = funnel3 + '%';
+    document.getElementById('funnel4').textContent = funnel4.toFixed(1) + '%';
+    document.getElementById('funnel4-bar').style.width = funnel4 + '%';
+    
+    renderReminders();
+    
+    // 更新日报相关显示
+    updateTodayStats();
+    updateDashboardReportStatus();
+}
+
+function renderReminders() {
+    var container = document.getElementById('reminders-list');
+    var dealCustomers = appData.customers.filter(function(c) { return c.status === 'deal'; });
+    if (dealCustomers.length === 0) {
+        container.innerHTML = '<div class="empty-state">暂无提醒</div>';
+        return;
+    }
+    var html = dealCustomers.slice(0, 3).map(function(c) {
+        return '<div class="list-item"><div><span class="badge badge-warning">📋 服务</span> <strong>' + c.name + '</strong><p style="margin:5px 0 0; color:var(--text-light); font-size:13px;">客户需要完成阶段' + ((c.serviceProgress || 1) + 1) + '</p></div></div>';
+    }).join('');
+    container.innerHTML = html || '<div class="empty-state">暂无提醒</div>';
+}
+
+// ========== 数据导出 ==========
+function exportData() {
+    var dataStr = JSON.stringify(appData, null, 2);
+    var blob = new Blob([dataStr], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'gaobao_backup_' + new Date().toISOString().split('T')[0] + '.json';
+    a.click();
+}
+
+function clearData() {
+    if (confirm('确定要清除所有数据吗？此操作不可恢复！')) {
+        localStorage.removeItem('gaobao_system_data');
+        alert('数据已清除！');
+        location.reload();
+    }
+}
+
+// ========== 页面加载 ==========
+window.onload = function() {
+    var saved = localStorage.getItem('gaobao_user');
+    if (saved) {
+        try {
+            var userData = JSON.parse(saved);
+            if (users[userData.username]) {
+                currentUser = userData;
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('mainPage').style.display = 'block';
+                initApp();
+            }
+        } catch(e) {}
+    }
+    
+    document.getElementById('loginBtn').onclick = doLogin;
+    document.getElementById('password').onkeypress = function(e) { if (e.key === 'Enter') doLogin(); };
+    document.getElementById('username').onkeypress = function(e) { if (e.key === 'Enter') doLogin(); };
+};
+</script>
+
+</body>
+</html>
