@@ -2486,6 +2486,40 @@ function initApp() {
 
 // ========== 数据加载/保存 ==========
 function loadData() {
+    // 清除所有数据，从头开始
+    appData = {
+        customers: [],
+        appointments: [],
+        tasks: [],
+        salesDailyStats: [],
+        team: [
+            { id: 1, name: '念老师', role: 'sales', phone: '13800138001' },
+            { id: 2, name: '周老师', role: 'sales', phone: '13800138002' },
+            { id: 3, name: '肖老师', role: 'sales', phone: '13800138003' },
+            { id: 4, name: '郭老师', role: 'sales', phone: '13800138004' },
+            { id: 5, name: '陈规划', role: 'planner', phone: '13800138005' }
+        ],
+        plannners: [
+            { id: 1, name: '高老师', phone: '13900139001' },
+            { id: 2, name: '王老师', phone: '13900139002' },
+            { id: 3, name: '罗老师', phone: '13900139003' },
+            { id: 4, name: '梁老师', phone: '13900139004' },
+            { id: 5, name: '李老师', phone: '13900139005' }
+        ],
+        serviceStages: [
+            { id: 1, name: '签单仪式' },
+            { id: 2, name: '建档启动' },
+            { id: 3, name: '初访咨询' },
+            { id: 4, name: '方案交付' },
+            { id: 5, name: '方案调整' },
+            { id: 6, name: '填报指导' },
+            { id: 7, name: '录取追踪' },
+            { id: 8, name: '入学入学' }
+        ],
+        cases: []
+    };
+    return;
+
     // 强制重置team数据为默认值（避免localStorage污染）
     appData.team = [
         { id: 1, name: '念老师', role: 'sales', phone: '13800138001' },
