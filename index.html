@@ -672,14 +672,7 @@
         <h1>📊 高报运营管理系统</h1>
         <div class="navbar-user">
             <span id="currentDate"></span>
-            <select id="userSelect">
-                <option value="admin">👤 管理员</option>
-                <option value="sales1">📞 电销-念老师</option>
-                <option value="sales2">📞 电销-周老师</option>
-                <option value="sales3">📞 电销-肖老师</option>
-                <option value="sales4">📞 电销-郭老师</option>
-                <option value="planner">📋 规划师</option>
-            </select>
+            <span id="userDisplay" style="color: white; font-weight: bold;"></span>
             <button onclick="logout()">退出</button>
         </div>
     </nav>
@@ -2089,6 +2082,8 @@ function doLogin() {
         
         document.getElementById('loginPage').style.display = 'none';
         document.getElementById('mainPage').style.display = 'block';
+        // 显示当前用户
+        document.getElementById('userDisplay').textContent = currentUser.name;
         initApp();
     } else {
         error.textContent = '账号或密码错误';
@@ -2102,6 +2097,7 @@ function logout() {
     document.getElementById('password').value = '';
     document.getElementById('loginPage').style.display = 'flex';
     document.getElementById('mainPage').style.display = 'none';
+    document.getElementById('userDisplay').textContent = '';
 }
 
 // ========== 电销日报功能 ==========
