@@ -2486,6 +2486,9 @@ function initApp() {
 
 // ========== 数据加载/保存 ==========
 function loadData() {
+    // 清除浏览器缓存数据
+    localStorage.clear();
+    
     // 清除所有数据，从头开始
     appData = {
         customers: [],
