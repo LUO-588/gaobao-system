@@ -4120,7 +4120,7 @@ function updateAppointmentPlanner(id, planner) {
 }
 
 function updateApptPlanner(id, planner) {
-    var appt = appData.appointments.find(function(a) { return a.id === id; });
+    var appt = appData.appointments.find(function(a) { return a.id == id; });
     if (appt) {
         appt.planner = planner;
         saveData();
