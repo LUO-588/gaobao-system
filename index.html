@@ -1961,7 +1961,8 @@ var users = {
     'nian': { password: '888888', name: '念老师', role: 'sales' },
     'zhou': { password: '888888', name: '周老师', role: 'sales' },
     'xiao': { password: '888888', name: '肖老师', role: 'sales' },
-    'guo': { password: '888888', name: '郭老师', role: 'sales' }
+    'guo': { password: '888888', name: '郭老师', role: 'sales' },
+    'planner': { password: '666666', name: '规划师', role: 'planner' }
 };
 
 var currentUser = null;
@@ -1969,6 +1970,14 @@ var currentUser = null;
 // ========== 权限控制函数 ==========
 function isAdmin() {
     return currentUser && currentUser.username === 'admin';
+}
+
+function isPlanner() {
+    return currentUser && currentUser.role === 'planner';
+}
+
+function isSales() {
+    return currentUser && currentUser.role === 'sales';
 }
 
 function isOwnData(createdBy) {
@@ -2627,7 +2636,7 @@ function openCustomerModal(id) {
     if (id) {
         var c = appData.customers.find(function(x) { return x.id === id; });
         if (c) {
-            var canEdit = isAdmin() || (currentUser && (currentUser.username === c.createdBy || c.owner == getCurrentTeamMemberId()));
+            var canEdit = isAdmin();
             if (!canEdit) {
                 alert('您没有权限编辑此客户');
                 return;
@@ -2995,7 +3004,7 @@ function openAddServiceCustomer(id) {
     if (id) {
         var c = appData.customers.find(function(x) { return x.id === id; });
         if (c) {
-            var canEdit = isAdmin() || (currentUser && (currentUser.username === c.createdBy || c.owner == getCurrentTeamMemberId()));
+            var canEdit = isAdmin();
             if (!canEdit) {
                 alert('您没有权限编辑此客户');
                 return;
