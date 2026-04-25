@@ -937,6 +937,7 @@
                 <div class="card">
                     <div class="card-header">
                         <span class="card-title">📊 个人业绩排行</span>
+                        <button id="perf-edit-btn" class="btn btn-sm btn-primary" onclick="openPerformanceEditModal()" style="display:none;">📝 调整业绩</button>
                     </div>
                     <table class="table">
                         <thead>
@@ -2474,7 +2475,11 @@ function initApp() {
     renderCustomers();
     renderPerformance();
     populateDashboardSalesSelect(); // 动态填充数据看板人员选择下拉框
-    populatePerformanceSalesSelect(); // 动态填充绩效看板人员选择下拉框
+    populatePerformanceSalesSelect();
+    // 根据权限显示调整业绩按钮
+    if (isAdmin()) {
+        document.getElementById('perf-edit-btn').style.display = 'inline-block';
+    } 动态填充绩效看板人员选择下拉框
     renderServices();           // 渲染付费客户列表
     renderPotentialCustomers(); // 渲染待跟进客户列表
     renderTeam();
