@@ -89,7 +89,7 @@
         .navbar {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
-            padding: 15px 20px;
+            padding: 10px 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -130,8 +130,8 @@
         /* 主容器 */
         .main-container {
             display: flex;
-            margin-top: 60px;
-            min-height: calc(100vh - 60px);
+            margin-top: 50px;
+            min-height: calc(100vh - 50px);
         }
         
         /* 侧边栏 */
@@ -441,7 +441,7 @@
         /* 预约表格 */
         .schedule-grid {
             display: grid;
-            grid-template-columns: 80px repeat(7, 1fr);
+            grid-template-columns: 80px repeat(7, minmax(100px, 1fr));
             gap: 1px;
             background: var(--border);
             border-radius: 8px;
