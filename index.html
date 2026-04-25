@@ -4049,6 +4049,11 @@ function openDealFromAppointment(apptId) {
     if (!appt) return;
     
     // 如果已有关联客户，直接使用
+    // 更新预约状态为成交
+    appt.status = 'success';
+    saveData();
+    renderSchedule();
+    
     if (appt.customerId) {
         window.pendingDealCustomerId = appt.customerId;
         document.getElementById('deal-amount').value = '';
