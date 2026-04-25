@@ -2482,6 +2482,14 @@ function loadData() {
             if (!appData.performance) {
                 appData.performance = {};
             }
+            // 修复：确保旧预约数据有status字段
+            if (appData.appointments && appData.appointments.length > 0) {
+                appData.appointments.forEach(function(appt) {
+                    if (!appt.status) {
+                        appt.status = 'pending';  // 旧预约默认为未到店状态
+                    }
+                });
+            }
         } catch(e) {
             console.log('[DEBUG] JSON解析错误:', e);
         }
