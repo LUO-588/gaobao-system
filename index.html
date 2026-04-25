@@ -3427,9 +3427,32 @@ function renderPerformance() {
         var sCustomers = appData.customers.filter(function(c) { return c.owner == s.id; });
         var deals = sCustomers.filter(function(c) { return c.status === 'deal'; }).length;
         var perfData = appData.performance[s.id] || {};
-        var calls = perfData.monthCalls || (150 + Math.floor(Math.random() * 50));
-        var wechat = perfData.monthWechat || (15 + Math.floor(Math.random() * 10));
-        var arrived = perfData.monthArrived || (5 + Math.floor(Math.random() * 5));
+        // 从日报数据获取真实统计
+        var monthStart = new Date();
+        monthStart.setDate(1);
+        var monthStartStr = monthStart.toISOString().split('T')[0];
+        var todayStr = getTodayString();
+        
+        var monthCalls = 0, monthWechat = 0, monthArrived = 0;
+        appData.salesDailyStats.forEach(function(stat) {
+            if (stat.salesId == s.id && stat.date >= monthStartStr && stat.date <= todayStr) {
+                monthCalls += stat.calls || 0;
+                monthWechat += stat.wechatAdded || 0;
+            }
+        });
+        
+        // 从预约获取到店数据
+        appData.appointments.forEach(function(appt) {
+            if (appt.salesmanId == s.id && appt.date >= monthStartStr && appt.date <= todayStr) {
+                if (appt.status === 'arrived' || appt.status === 'success') {
+                    monthArrived++;
+                }
+            }
+        });
+        
+        var calls = perfData.monthCalls || monthCalls;
+        var wechat = perfData.monthWechat || monthWechat;
+        var arrived = perfData.monthArrived || monthArrived;
         return '<tr><td>' + (idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1) + '</td><td><strong>' + s.name + '</strong></td><td>' + calls + '</td><td>' + wechat + '</td><td>' + arrived + '</td><td><strong style="color:var(--success);">' + deals + '</strong></td><td>' + (arrived > 0 ? (deals / arrived * 100).toFixed(1) : '0.0') + '%</td></tr>';
     }).join('');
 }
@@ -4244,10 +4267,70 @@ function updateDashboard() {
     var salesId = document.getElementById('dashboard-sales-select').value;
     document.getElementById('dashboard-period-label').textContent = (currentDashboardPeriod === 'today' ? '本日' : currentDashboardPeriod === 'week' ? '本周' : '本月') + '数据';
     
-    var calls = salesId === 'all' ? 624 : 156;
-    var wechat = salesId === 'all' ? 72 : 18;
-    var visit = salesId === 'all' ? 28 : 7;
-    var arrived = salesId === 'all' ? 25 : 6;
+    // 从日报数据统计
+    var periodStart = getPeriodStart(currentDashboardPeriod);
+    var periodEnd = getTodayString();
+    
+    var stats = getSalesStats(salesId, periodStart, periodEnd);
+    
+    var calls = stats.calls;
+    var wechat = stats.wechatAdded;
+    var visit = stats.appointments;
+    var arrived = stats.arrived;
+    
+    // 辅助函数
+    function getPeriodStart(period) {
+        var today = new Date();
+        if (period === 'today') {
+            return today.toISOString().split('T')[0];
+        } else if (period === 'week') {
+            var dayOfWeek = today.getDay() || 7;
+            var monday = new Date(today);
+            monday.setDate(today.getDate() - dayOfWeek + 1);
+            return monday.toISOString().split('T')[0];
+        } else {
+            return today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-01';
+        }
+    }
+    
+    function getSalesStats(salesId, periodStart, periodEnd) {
+        var result = { calls: 0, connected: 0, wechatAdded: 0, appointments: 0, arrived: 0, deals: 0, revenue: 0 };
+        
+        // 从日报获取统计数据
+        appData.salesDailyStats.forEach(function(stat) {
+            if (stat.date >= periodStart && stat.date <= periodEnd) {
+                if (salesId === 'all' || stat.salesId === salesId || stat.salesId == salesId) {
+                    result.calls += stat.calls || 0;
+                    result.connected += stat.connected || 0;
+                    result.wechatAdded += stat.wechatAdded || 0;
+                    result.appointments += stat.appointments || 0;
+                }
+            }
+        });
+        
+        // 从预约获取到店数据
+        appData.appointments.forEach(function(appt) {
+            if (appt.date >= periodStart && appt.date <= periodEnd) {
+                if (salesId === 'all' || appt.salesmanId == salesId) {
+                    if (appt.status === 'arrived' || appt.status === 'success') {
+                        result.arrived++;
+                    }
+                }
+            }
+        });
+        
+        // 从客户获取成交数据
+        appData.customers.forEach(function(c) {
+            if (c.status === 'deal') {
+                if (salesId === 'all' || c.owner == salesId) {
+                    result.deals++;
+                    result.revenue += c.amount ? parseFloat(c.amount) : 0;
+                }
+            }
+        });
+        
+        return result;
+    }
     var deals = appData.customers.filter(function(c) { return c.status === 'deal' && (salesId === 'all' || c.owner == salesId); }).length;
     var revenue = appData.customers.filter(function(c) { return c.status === 'deal' && (salesId === 'all' || c.owner == salesId); }).reduce(function(sum, c) { return sum + (c.amount ? parseFloat(c.amount) : 0); }, 0);
     
